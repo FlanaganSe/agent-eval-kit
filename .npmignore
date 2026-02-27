@@ -1,0 +1,12 @@
+src/
+test/
+vitest.config.ts
+tsconfig.json
+biome.json
+.github/
+.claude/
+plans/
+coverage/
+.eval-fixtures/
+.eval-runs/
+*.test.ts

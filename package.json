@@ -1,0 +1,69 @@
+{
+	"name": "agent-evals",
+	"version": "0.0.1",
+	"description": "TypeScript-native eval framework for AI agent workflows. Record-replay, deterministic + LLM graders, trajectory evaluation.",
+	"type": "module",
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"bin": {
+		"agent-evals": "./bin/cli.mjs"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./graders": {
+			"types": "./dist/graders/index.d.ts",
+			"default": "./dist/graders/index.js"
+		},
+		"./plugin": {
+			"types": "./dist/plugin/types.d.ts",
+			"default": "./dist/plugin/types.js"
+		}
+	},
+	"files": [
+		"dist",
+		"bin"
+	],
+	"sideEffects": false,
+	"scripts": {
+		"build": "tsc",
+		"clean": "rm -rf dist",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"verify": "pnpm typecheck && pnpm lint && pnpm test"
+	},
+	"keywords": [
+		"ai",
+		"agent",
+		"eval",
+		"evaluation",
+		"testing",
+		"llm",
+		"grader",
+		"record-replay"
+	],
+	"license": "MIT",
+	"dependencies": {
+		"c12": "^3.3.3",
+		"citty": "^0.2.1",
+		"jiti": "^2.6.1",
+		"picocolors": "^1.1.1",
+		"yaml": "^2.8.2",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.4",
+		"@types/node": "^25.3.2",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["esbuild", "@biomejs/biome"]
+	}
+}
