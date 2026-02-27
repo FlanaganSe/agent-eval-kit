@@ -1,6 +1,12 @@
+node_modules/
+dist/
+coverage/
+.eval-fixtures/
+.eval-runs/
+
 .env
 .DS_Store
 
 # Claude
 .claude/plans/
-.claude/worktrees/ 
+.claude/worktrees/

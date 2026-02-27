@@ -2,15 +2,23 @@ export const VERSION = "0.0.1";
 
 // Config
 export { defineConfig } from "./config/define-config.js";
+export type { LoadConfigOptions, ValidatedConfig } from "./config/loader.js";
+export { loadConfig } from "./config/loader.js";
 // Schemas
 export {
 	CaseCategorySchema,
 	CaseExpectedSchema,
 	CaseInputSchema,
 	CaseSchema,
+	CategorySummarySchema,
 	EvalConfigSchema,
+	FixtureEntrySchema,
+	FixtureMetaSchema,
+	GateCheckResultSchema,
 	GateConfigSchema,
+	GateResultSchema,
 	GradeResultSchema,
+	RunModeSchema,
 	RunSchema,
 	RunSummarySchema,
 	SerializedGraderConfigSchema,
@@ -21,15 +29,25 @@ export {
 	TrialSchema,
 } from "./config/schema.js";
 export type {
+	Case,
 	CaseCategory,
 	CaseExpected,
 	CaseInput,
+	CaseResult,
+	CategorySummary,
 	EvalConfig,
+	GateCheckResult,
 	GateConfig,
+	GateResult,
 	GraderConfig,
 	GraderContext,
+	GraderFactory,
 	GraderFn,
+	ResolvedSuite,
 	Run,
+	RunMeta,
+	RunMode,
+	RunOptions,
 	RunSummary,
 	SuiteConfig,
 	Target,
@@ -38,6 +56,8 @@ export type {
 	ToolCall,
 	Trial,
 } from "./config/types.js";
+// Plugin
+export type { EvalPlugin } from "./plugin/types.js";
 // Reporters
 export { formatJsonReport } from "./reporters/json.js";
 // Runner

@@ -6,7 +6,10 @@ import type { GraderFn, Run } from "../config/types.js";
  */
 export interface EvalPlugin {
 	readonly name: string;
+	readonly version: string;
 	readonly graders?: Record<string, GraderFn>;
-	readonly beforeRun?: (context: { readonly suiteId: string }) => Promise<void>;
-	readonly afterRun?: (run: Run) => Promise<void>;
+	readonly hooks?: {
+		readonly beforeRun?: (context: { readonly suiteId: string }) => Promise<void>;
+		readonly afterRun?: (run: Run) => Promise<void>;
+	};
 }

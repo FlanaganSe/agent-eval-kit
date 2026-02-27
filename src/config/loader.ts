@@ -5,6 +5,7 @@ import type { EvalConfig, ResolvedSuite, RunMode, SuiteConfig } from "./types.js
 
 export interface LoadConfigOptions {
 	readonly configPath?: string | undefined;
+	readonly cwd?: string | undefined;
 }
 
 export interface ValidatedConfig {
@@ -21,10 +22,12 @@ export interface ValidatedConfig {
  */
 export async function loadConfig(options?: LoadConfigOptions): Promise<ValidatedConfig> {
 	const configFile = options?.configPath ?? "eval.config";
+	const basePath = options?.cwd ?? process.cwd();
 
 	const { config } = await loadC12Config<EvalConfig>({
 		name: "eval",
 		configFile,
+		cwd: basePath,
 	});
 
 	if (!config || !config.suites || config.suites.length === 0) {
@@ -33,7 +36,7 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 		);
 	}
 
-	const resolvedSuites = await resolveSuites(config.suites, process.cwd());
+	const resolvedSuites = await resolveSuites(config.suites, basePath);
 
 	return {
 		suites: resolvedSuites,

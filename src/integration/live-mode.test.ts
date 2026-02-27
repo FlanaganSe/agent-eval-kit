@@ -129,4 +129,77 @@ describe("Live mode integration", () => {
 		const run = await runSuite(suite, { mode: "live", timeoutMs: 5000 });
 		expect(run.trials[0]?.status).toBe("pass");
 	});
+
+	it("gate failure: pass rate below threshold", async () => {
+		const suite: ResolvedSuite = {
+			name: "gate-fail-suite",
+			target: mockTarget,
+			cases: [
+				{ id: "P01", input: { query: "pass" } },
+				{ id: "F01", input: { query: "fail" } },
+			],
+			defaultGraders: [{ grader: contains("pass"), required: true }],
+			gates: {
+				passRate: 0.95,
+			},
+		};
+
+		const run = await runSuite(suite, { mode: "live", timeoutMs: 5000 });
+
+		// Only the first case has "pass" in the response text ("Response for: pass")
+		expect(run.summary.passRate).toBe(0.5);
+		expect(run.summary.gateResult.pass).toBe(false);
+
+		const passRateGate = run.summary.gateResult.results.find((r) => r.gate === "passRate");
+		expect(passRateGate?.pass).toBe(false);
+		expect(passRateGate?.actual).toBe(0.5);
+		expect(passRateGate?.threshold).toBe(0.95);
+
+		// Validate schema round-trip
+		const schemaResult = RunSchema.safeParse(run);
+		expect(schemaResult.success).toBe(true);
+	});
+
+	it("computes byCategory summary when cases have categories", async () => {
+		const suite: ResolvedSuite = {
+			name: "category-suite",
+			target: mockTarget,
+			cases: [
+				{ id: "H01", input: { query: "hello" }, category: "happy_path" },
+				{ id: "H02", input: { query: "world" }, category: "happy_path" },
+				{ id: "E01", input: { query: "edge" }, category: "edge_case" },
+			],
+			defaultGraders: [{ grader: contains("Response for") }],
+		};
+
+		const run = await runSuite(suite, { mode: "live", timeoutMs: 5000 });
+
+		expect(run.summary.byCategory).toBeDefined();
+		expect(run.summary.byCategory?.happy_path).toEqual({
+			total: 2,
+			passed: 2,
+			failed: 0,
+			errors: 0,
+			passRate: 1,
+		});
+		expect(run.summary.byCategory?.edge_case).toEqual({
+			total: 1,
+			passed: 1,
+			failed: 0,
+			errors: 0,
+			passRate: 1,
+		});
+	});
+
+	it("byCategory is undefined when no cases have categories", async () => {
+		const suite: ResolvedSuite = {
+			name: "no-category-suite",
+			target: mockTarget,
+			cases: [{ id: "H01", input: { query: "test" } }],
+			defaultGraders: [{ grader: contains("Response for") }],
+		};
+
+		const run = await runSuite(suite, { mode: "live", timeoutMs: 5000 });
+		expect(run.summary.byCategory).toBeUndefined();
+	});
 });

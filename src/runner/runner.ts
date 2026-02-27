@@ -31,7 +31,7 @@ export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promi
 	}
 
 	const totalDurationMs = Date.now() - startTime;
-	const partialSummary = computePartialSummary(trials, totalDurationMs);
+	const partialSummary = computePartialSummary(trials, suite.cases, totalDurationMs);
 	const gateResult = evaluateGates(partialSummary, suite.gates);
 
 	const summary: RunSummary = {
@@ -124,6 +124,7 @@ async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number): Promise<
 
 function computePartialSummary(
 	trials: readonly Trial[],
+	cases: readonly Case[],
 	totalDurationMs: number,
 ): Omit<RunSummary, "gateResult"> {
 	const passed = trials.filter((t) => t.status === "pass").length;
@@ -133,7 +134,7 @@ function computePartialSummary(
 	const passRate = totalCases > 0 ? passed / totalCases : 0;
 	const totalCost = trials.reduce((sum, t) => sum + (t.output.cost ?? 0), 0);
 	const p95LatencyMs = computeP95(trials.map((t) => t.output.latencyMs));
-	const byCategory = computeByCategory(trials);
+	const byCategory = computeByCategory(trials, cases);
 
 	return {
 		totalCases,
@@ -155,9 +156,51 @@ function computeP95(values: readonly number[]): number {
 	return sorted[Math.max(0, idx)] ?? 0;
 }
 
-function computeByCategory(_trials: readonly Trial[]): Record<CaseCategory, CategorySummary> {
-	// TODO: populate when cases carry category information through the pipeline
-	return {} as Record<CaseCategory, CategorySummary>;
+function computeByCategory(
+	trials: readonly Trial[],
+	cases: readonly Case[],
+): Record<string, CategorySummary> {
+	const categoryMap = new Map<string, CaseCategory>();
+	for (const c of cases) {
+		if (c.category !== undefined) {
+			categoryMap.set(c.id, c.category);
+		}
+	}
+
+	if (categoryMap.size === 0) return {};
+
+	const buckets = new Map<
+		CaseCategory,
+		{ total: number; passed: number; failed: number; errors: number }
+	>();
+
+	for (const trial of trials) {
+		const category = categoryMap.get(trial.caseId);
+		if (category === undefined) continue;
+
+		let bucket = buckets.get(category);
+		if (bucket === undefined) {
+			bucket = { total: 0, passed: 0, failed: 0, errors: 0 };
+			buckets.set(category, bucket);
+		}
+		bucket.total += 1;
+		if (trial.status === "pass") bucket.passed += 1;
+		else if (trial.status === "fail") bucket.failed += 1;
+		else bucket.errors += 1;
+	}
+
+	const result: Record<string, CategorySummary> = {};
+	for (const [category, bucket] of buckets) {
+		result[category] = {
+			total: bucket.total,
+			passed: bucket.passed,
+			failed: bucket.failed,
+			errors: bucket.errors,
+			passRate: bucket.total > 0 ? bucket.passed / bucket.total : 0,
+		};
+	}
+
+	return result;
 }
 
 // TODO(phase2): This hash covers suite structure only — not target identity (model, system prompt,

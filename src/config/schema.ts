@@ -125,7 +125,7 @@ export const RunSummarySchema = z.strictObject({
 	totalDurationMs: z.number().nonnegative(),
 	p95LatencyMs: z.number().nonnegative(),
 	gateResult: GateResultSchema,
-	byCategory: z.record(CaseCategorySchema, CategorySummarySchema).optional(),
+	byCategory: z.record(z.string(), CategorySummarySchema).optional(),
 });
 
 export const RunModeSchema = z.union([
