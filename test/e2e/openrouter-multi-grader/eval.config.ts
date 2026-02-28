@@ -18,8 +18,9 @@
  * Run:
  *   node dist/cli/index.js run --config test/e2e/openrouter-multi-grader
  */
-import { z } from "zod";
+
 import OpenAI from "openai";
+import { z } from "zod";
 import { defineConfig } from "../../../src/config/define-config.js";
 import type { CaseInput, TargetOutput } from "../../../src/config/types.js";
 import {
@@ -246,10 +247,7 @@ export default defineConfig({
 			description: "Boundary conditions loaded from cases.jsonl",
 			target,
 			cases: "edge-cases.jsonl",
-			defaultGraders: [
-				{ grader: latency(15_000) },
-				{ grader: tokenCount(500) },
-			],
+			defaultGraders: [{ grader: latency(15_000) }, { grader: tokenCount(500) }],
 			gates: { passRate: 0.5 },
 		},
 	],

@@ -181,7 +181,10 @@ const noToolErrors: GraderFn = async (output) => {
 	}
 
 	const errorCalls = output.toolCalls.filter(
-		(tc) => tc.result != null && typeof tc.result === "object" && "error" in (tc.result as Record<string, unknown>),
+		(tc) =>
+			tc.result != null &&
+			typeof tc.result === "object" &&
+			"error" in (tc.result as Record<string, unknown>),
 	);
 
 	return {
