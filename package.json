@@ -2,6 +2,15 @@
 	"name": "agent-evals",
 	"version": "0.0.1",
 	"description": "TypeScript-native eval framework for AI agent workflows. Record-replay, deterministic + LLM graders, trajectory evaluation.",
+	"author": "Sean Flanagan <flanspan11@gmail.com>",
+	"repository": {
+		"type": "git",
+		"url": "git+github.com:FlanaganSe/agent-evals.git"
+	},
+	"homepage": "https://github.com/FlanaganSe/agent-evals#readme",
+	"bugs": {
+		"url": "https://github.com/FlanaganSe/agent-evals/issues"
+	},
 	"type": "module",
 	"engines": {
 		"node": ">=20.0.0"
@@ -19,16 +28,16 @@
 			"default": "./dist/graders/index.js"
 		},
 		"./comparison": {
-			"types": "./dist/comparison/compare.d.ts",
-			"default": "./dist/comparison/compare.js"
+			"types": "./dist/comparison/index.d.ts",
+			"default": "./dist/comparison/index.js"
 		},
 		"./plugin": {
 			"types": "./dist/plugin/types.d.ts",
 			"default": "./dist/plugin/types.js"
 		},
 		"./reporters": {
-			"types": "./dist/reporters/types.d.ts",
-			"default": "./dist/reporters/types.js"
+			"types": "./dist/reporters/index.d.ts",
+			"default": "./dist/reporters/index.js"
 		},
 		"./fixtures": {
 			"types": "./dist/fixtures/index.d.ts",
@@ -54,7 +63,8 @@
 		"typecheck": "tsc --noEmit",
 		"prepare": "lefthook install",
 		"verify": "pnpm typecheck && pnpm lint && pnpm test",
-		"validate-package": "pnpm build && npx publint && npx @arethetypeswrong/cli --pack . --profile esm-only"
+		"validate-package": "pnpm build && npx publint && npx @arethetypeswrong/cli --pack . --profile esm-only",
+		"prepublishOnly": "pnpm build"
 	},
 	"keywords": [
 		"ai",
