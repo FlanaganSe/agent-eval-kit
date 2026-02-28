@@ -7,6 +7,8 @@ config → target → graders → gates → report → storage.
 test/e2e/
 ├── openrouter/              Deterministic graders (contains, latency)
 ├── openrouter-judge/        LLM-as-judge graders (llmRubric, factuality, classify, mixed)
+├── openrouter-tool-agent/   Tool-using agent with tool call graders + plugins
+├── openrouter-multi-grader/ Grader composition, JSON schema, safety, categories
 ├── anthropic/               Anthropic API direct (same cases as openrouter/)
 └── README.md
 ```
@@ -32,6 +34,12 @@ node dist/cli/index.js run --config test/e2e/openrouter
 
 # LLM judge graders — proves judge pipeline (2 LLM calls per case: target + judge)
 node dist/cli/index.js run --config test/e2e/openrouter-judge
+
+# Tool-using agent — proves tool call grading pipeline
+node dist/cli/index.js run --config test/e2e/openrouter-tool-agent
+
+# Grader composition — proves all/any/not, jsonSchema, regex, safety, categories
+node dist/cli/index.js run --config test/e2e/openrouter-multi-grader
 
 # Anthropic direct
 node dist/cli/index.js run --config test/e2e/anthropic
@@ -62,6 +70,54 @@ The judge is wrapped with `createCachingJudge()` so repeated identical calls are
 ```bash
 # Run a single suite
 node dist/cli/index.js run --config test/e2e/openrouter-judge --suite rubric
+```
+
+### `openrouter-tool-agent/` — tool-using agent
+
+Simulates an agent with two tools (`get_weather`, `convert_temperature`). The target runs a tool-call loop: send prompt → receive tool calls → execute tools → feed results back → get final answer.
+
+Five suites covering different aspects of tool use:
+
+| Suite | Graders | What it proves |
+|-------|---------|----------------|
+| `tool-use` | `toolCalled` (required), custom `noToolErrors` (required) | Agent calls the right tools with no errors |
+| `tool-sequence` | `toolSequence("strict")`, `toolArgsMatch("subset")` | Agent follows the correct multi-step tool call order |
+| `safety` | `all(not(), safetyKeywords(), toolNotCalled())` | Adversarial inputs are refused, no tools invoked |
+| `edge-cases` | `latency` (from external `cases.jsonl`) | Boundary conditions loaded from an external case file |
+
+Demonstrates:
+- **Plugins**: `tool-health` plugin contributes a custom grader (`noToolErrors`) and logs tool call counts per trial. `cost-tracker` plugin reports total cost after each suite.
+- **Grader composition**: `all()`, `not()` combined with `toolNotCalled()` and `safetyKeywords()`.
+- **External cases**: `cases.jsonl` loaded at runtime.
+- **Case categories**: `happy_path`, `multi_step`, `edge_case`, `adversarial`.
+
+```bash
+# Run a single suite
+node dist/cli/index.js run --config test/e2e/openrouter-tool-agent --suite tool-use
+```
+
+### `openrouter-multi-grader/` — grader composition
+
+Exercises the broadest range of deterministic graders in a single config:
+
+| Suite | Graders | What it proves |
+|-------|---------|----------------|
+| `structured-output` | `jsonSchema(ZodSchema)`, `contains` | LLM returns valid JSON matching a Zod schema |
+| `text-patterns` | `any(regex(), exactMatch())` | Text format validation with disjunction |
+| `composition` | `all(contains, notContains, not(contains))` | Composed graders in conjunction |
+| `safety` | `all(safetyKeywords(), notContains())` | Model refuses harmful requests |
+| `edge-cases` | `latency`, `tokenCount` (from external `cases.jsonl`) | Boundary conditions from external file |
+
+Demonstrates:
+- **`jsonSchema()`**: Validates LLM output against a Zod `z.strictObject()` schema.
+- **`any()`**: Disjunction — at least one grader must pass.
+- **`not()`**: Negation — inverts a grader's result.
+- **Metric graders**: `cost()`, `tokenCount()` alongside `latency()`.
+- **Plugin**: `category-report` logs per-category pass rates after each run.
+
+```bash
+# Run a single suite
+node dist/cli/index.js run --config test/e2e/openrouter-multi-grader --suite structured-output
 ```
 
 ### `anthropic/` — Anthropic API direct
@@ -146,4 +202,4 @@ node dist/cli/index.js run --config <config> --filter-failing <id> # Re-run only
 
 ## Cost
 
-Each run with Haiku costs fractions of a cent. Judge configs double the calls (target + judge). `--trials N` multiplies by N.
+Each run with Haiku costs fractions of a cent. Judge configs double the calls (target + judge). `--trials N` multiplies by N. The tool-agent config may use 2-3x calls per case due to the tool-call loop.

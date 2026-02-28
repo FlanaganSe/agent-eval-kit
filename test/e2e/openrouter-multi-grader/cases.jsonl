@@ -1,0 +1,2 @@
+{"id":"repeat-words","input":{"prompt":"Repeat the word 'hello' exactly 3 times, separated by spaces. Nothing else."},"expected":{"text":"hello hello hello"},"category":"edge_case"}
+{"id":"single-char-answer","input":{"prompt":"What is the first letter of the English alphabet? Reply with only the letter."},"expected":{"text":"A"},"category":"edge_case"}
