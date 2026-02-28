@@ -122,10 +122,7 @@ export default defineConfig({
 					id: "helpful-explanation",
 					input: { prompt: "Explain why the sky is blue in one sentence." },
 				},
-				{
-					id: "concise-answer",
-					input: { prompt: "What causes tides? Answer in under 20 words." },
-				},
+				"rubric-cases.jsonl",
 			],
 			defaultGraders: [
 				{
@@ -156,13 +153,7 @@ export default defineConfig({
 						text: "Water boils at 100 degrees Celsius (212 degrees Fahrenheit) at sea level.",
 					},
 				},
-				{
-					id: "speed-of-light",
-					input: { prompt: "What is the speed of light in a vacuum? Be precise." },
-					expected: {
-						text: "The speed of light in a vacuum is approximately 299,792,458 meters per second.",
-					},
-				},
+				"factuality-cases.jsonl",
 			],
 			defaultGraders: [{ grader: factuality(), required: true }, { grader: latency(15_000) }],
 			gates: {
@@ -206,13 +197,7 @@ export default defineConfig({
 					input: { prompt: "Write a one-sentence product review for a pair of shoes you love." },
 					expected: { metadata: { classification: "positive" } },
 				},
-				{
-					id: "sentiment-negative",
-					input: {
-						prompt: "Write a one-sentence product review for headphones that broke after one day.",
-					},
-					expected: { metadata: { classification: "negative" } },
-				},
+				"classify-cases.jsonl",
 			],
 			defaultGraders: [
 				{

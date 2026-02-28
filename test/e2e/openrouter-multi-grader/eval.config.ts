@@ -245,7 +245,7 @@ export default defineConfig({
 			name: "edge-cases",
 			description: "Boundary conditions loaded from cases.jsonl",
 			target,
-			cases: "cases.jsonl",
+			cases: "edge-cases.jsonl",
 			defaultGraders: [
 				{ grader: latency(15_000) },
 				{ grader: tokenCount(500) },

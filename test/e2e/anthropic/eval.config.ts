@@ -81,19 +81,7 @@ export default defineConfig({
 					input: { prompt: "What is the capital of Japan? Reply with only the city name." },
 					category: "happy_path",
 				},
-				{
-					id: "multiply",
-					input: { prompt: "What is 7 * 8? Reply with only the number." },
-					category: "happy_path",
-				},
-				{
-					id: "color-list",
-					input: {
-						prompt:
-							"List the three primary colors of light, comma-separated. Reply with only the list.",
-					},
-					category: "happy_path",
-				},
+				"pipeline-cases.jsonl",
 			],
 			defaultGraders: [{ grader: latency(15_000) }],
 			gates: {
