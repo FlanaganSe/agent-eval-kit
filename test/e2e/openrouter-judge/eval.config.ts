@@ -1,11 +1,13 @@
 /**
  * E2E eval with LLM-as-judge grading via OpenRouter.
  *
- * Demonstrates Phase 4 features:
+ * Demonstrates:
  *   - judge config (LLM evaluates LLM output)
  *   - llmRubric grader (natural language criteria)
  *   - factuality grader (checks output against expected reference)
+ *   - llmClassify grader (categorize output into predefined classes)
  *   - deterministic + LLM graders in the same suite
+ *   - judge caching (createCachingJudge)
  *
  * Two LLM calls per graded case: one for the target, one for the judge.
  *
@@ -28,7 +30,14 @@ import type {
 	JudgeMessage,
 	TargetOutput,
 } from "../../../src/config/types.js";
-import { contains, factuality, latency, llmRubric } from "../../../src/graders/index.js";
+import {
+	contains,
+	createCachingJudge,
+	factuality,
+	latency,
+	llmClassify,
+	llmRubric,
+} from "../../../src/graders/index.js";
 
 // ─── Shared client ──────────────────────────────────────────────────────────
 
@@ -88,7 +97,7 @@ const judge: JudgeCallFn = async (messages, options) => {
 // ─── Suites ─────────────────────────────────────────────────────────────────
 
 export default defineConfig({
-	judge: { call: judge, model: judgeModel },
+	judge: { call: createCachingJudge(judge), model: judgeModel },
 
 	suites: [
 		// Suite 1: llmRubric — judge evaluates against natural language criteria.
@@ -132,18 +141,19 @@ export default defineConfig({
 				{
 					id: "boiling-point",
 					input: { prompt: "At what temperature does water boil at sea level? Be precise." },
-					expected: { text: "Water boils at 100 degrees Celsius (212 degrees Fahrenheit) at sea level." },
+					expected: {
+						text: "Water boils at 100 degrees Celsius (212 degrees Fahrenheit) at sea level.",
+					},
 				},
 				{
 					id: "speed-of-light",
 					input: { prompt: "What is the speed of light in a vacuum? Be precise." },
-					expected: { text: "The speed of light in a vacuum is approximately 299,792,458 meters per second." },
+					expected: {
+						text: "The speed of light in a vacuum is approximately 299,792,458 meters per second.",
+					},
 				},
 			],
-			defaultGraders: [
-				{ grader: factuality(), required: true },
-				{ grader: latency(15_000) },
-			],
+			defaultGraders: [{ grader: factuality(), required: true }, { grader: latency(15_000) }],
 			gates: {
 				passRate: 1.0,
 				p95LatencyMs: 15_000,
@@ -165,6 +175,45 @@ export default defineConfig({
 			defaultGraders: [
 				{ grader: contains("Paris"), required: true },
 				{ grader: llmRubric("The response contains only a city name with no extra text.") },
+				{ grader: latency(15_000) },
+			],
+			gates: {
+				passRate: 1.0,
+				p95LatencyMs: 15_000,
+			},
+		},
+
+		// Suite 4: llmClassify — judge classifies output into predefined categories.
+		// Each case declares its expected category in expected.metadata.classification.
+		{
+			name: "classify",
+			description: "LLM judge classifies output into predefined categories",
+			target,
+			cases: [
+				{
+					id: "sentiment-positive",
+					input: { prompt: "Write a one-sentence product review for a pair of shoes you love." },
+					expected: { metadata: { classification: "positive" } },
+				},
+				{
+					id: "sentiment-negative",
+					input: {
+						prompt: "Write a one-sentence product review for headphones that broke after one day.",
+					},
+					expected: { metadata: { classification: "negative" } },
+				},
+			],
+			defaultGraders: [
+				{
+					grader: llmClassify({
+						categories: {
+							positive: "The text expresses satisfaction, praise, or a favorable opinion.",
+							negative: "The text expresses dissatisfaction, criticism, or an unfavorable opinion.",
+							neutral: "The text is neither clearly positive nor clearly negative.",
+						},
+					}),
+					required: true,
+				},
 				{ grader: latency(15_000) },
 			],
 			gates: {

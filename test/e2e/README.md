@@ -6,7 +6,7 @@ config → target → graders → gates → report → storage.
 ```
 test/e2e/
 ├── openrouter/              Deterministic graders (contains, latency)
-├── openrouter-judge/        LLM-as-judge graders (llmRubric, factuality, mixed)
+├── openrouter-judge/        LLM-as-judge graders (llmRubric, factuality, classify, mixed)
 ├── anthropic/               Anthropic API direct (same cases as openrouter/)
 └── README.md
 ```
@@ -48,13 +48,16 @@ Proves: config loading, target execution, deterministic grading, gates, run stor
 
 Sends prompts to a **target** LLM, then sends the responses to a **judge** LLM that scores them 1-4 against criteria you define in English.
 
-Three suites, each testing a different grading pattern:
+Four suites, each testing a different grading pattern:
 
 | Suite | Graders | What it proves |
 |-------|---------|----------------|
 | `rubric` | `llmRubric("criteria...")` | Judge scores output against open-ended criteria. No expected answer needed. |
 | `factuality` | `factuality()` | Judge checks output against a known reference in `expected.text`. |
 | `mixed` | `contains()` + `llmRubric()` | Deterministic and LLM graders compose in the same suite. |
+| `classify` | `llmClassify({ categories })` | Judge classifies output into predefined categories. |
+
+The judge is wrapped with `createCachingJudge()` so repeated identical calls are served from cache.
 
 ```bash
 # Run a single suite
@@ -88,6 +91,20 @@ node dist/cli/index.js run --config <config> --filter capital-france  # Single c
 node dist/cli/index.js run --config <config> --trials 3               # Flakiness detection
 node dist/cli/index.js run --config <config> --rate-limit 30          # Requests per minute
 node dist/cli/index.js run --config <config> --concurrency 2          # Max parallel cases
+node dist/cli/index.js run --config <config> --confirm-cost --auto-approve  # Show cost estimate
+```
+
+## Reporters
+
+```bash
+# Default console output
+node dist/cli/index.js run --config <config>
+
+# JUnit XML (for CI pipelines)
+node dist/cli/index.js run --config <config> --reporter junit --output results.xml
+
+# Markdown (for PR comments / GitHub Actions step summary)
+node dist/cli/index.js run --config <config> --reporter markdown
 ```
 
 ## Judge-only re-grading
