@@ -44,7 +44,8 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
-		"verify": "pnpm typecheck && pnpm lint && pnpm test"
+		"verify": "pnpm typecheck && pnpm lint && pnpm test",
+		"validate-package": "pnpm build && npx publint && npx @arethetypeswrong/cli --pack . --profile esm-only"
 	},
 	"keywords": [
 		"ai",
@@ -58,6 +59,7 @@
 	],
 	"license": "MIT",
 	"dependencies": {
+		"@clack/prompts": "^1.0.1",
 		"c12": "^3.3.3",
 		"citty": "^0.2.1",
 		"consola": "^3.4.2",

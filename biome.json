@@ -26,7 +26,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["vitest.config.ts"],
+			"includes": ["**/*.config.ts"],
 			"linter": { "enabled": false }
 		}
 	],

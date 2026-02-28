@@ -16,7 +16,7 @@ import { contains, latency } from "../../../src/graders/index.js";
 // ─── Cost ───────────────────────────────────────────────────────────────────
 // Haiku 4.5 pricing. In production, use your model's actual pricing.
 
-const INPUT_COST_PER_TOKEN = 0.80 / 1_000_000; // $0.80 per million input tokens
+const INPUT_COST_PER_TOKEN = 0.8 / 1_000_000; // $0.80 per million input tokens
 const OUTPUT_COST_PER_TOKEN = 4.0 / 1_000_000; // $4.00 per million output tokens
 
 function tokenCost(input: number, output: number): number {
