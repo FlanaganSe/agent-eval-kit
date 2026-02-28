@@ -12,6 +12,7 @@ import type {
 } from "../config/types.js";
 import { VERSION } from "../index.js";
 import { evaluateGates } from "./gate.js";
+import { runJudgeOnly } from "./judge-only.js";
 import { runGraderPipeline } from "./pipeline.js";
 import { computeAllTrialStats } from "./statistics.js";
 
@@ -25,8 +26,15 @@ interface TrialWorkItem {
 /**
  * Executes a suite against the target function.
  * Supports trials, concurrency, rate limiting, and abort signals.
+ *
+ * In judge-only mode, re-grades trials from a previous run without
+ * re-executing the target. Requires `options.previousRun` to be set.
  */
 export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promise<Run> {
+	if (options.mode === "judge-only") {
+		return runSuiteJudgeOnly(suite, options);
+	}
+
 	const runId = randomUUID();
 	const startTime = Date.now();
 	const trialCount = options.trials ?? 1;
@@ -86,6 +94,53 @@ export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promi
 		suiteId: suite.name,
 		mode: options.mode,
 		trials,
+		summary,
+		timestamp: new Date().toISOString(),
+		configHash: computeConfigHash(suite),
+		frameworkVersion: VERSION,
+	};
+}
+
+async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Promise<Run> {
+	if (!options.previousRun) {
+		throw new Error("--mode=judge-only requires --run-id=<id> to specify a previous run.");
+	}
+
+	const runId = randomUUID();
+	const startTime = Date.now();
+
+	const trials = await runJudgeOnly({
+		previousRun: options.previousRun,
+		suiteConfig: suite,
+		runOptions: options,
+	});
+
+	// Sort trials deterministically
+	const sortedTrials = [...trials].sort((a, b) => {
+		const caseCompare = a.caseId < b.caseId ? -1 : a.caseId > b.caseId ? 1 : 0;
+		if (caseCompare !== 0) return caseCompare;
+		return (a.trialIndex ?? 0) - (b.trialIndex ?? 0);
+	});
+
+	const totalDurationMs = Date.now() - startTime;
+	const trialStats = computeAllTrialStats(sortedTrials, options.trials);
+	const partialSummary = computePartialSummary(
+		sortedTrials,
+		suite.cases,
+		totalDurationMs,
+		trialStats,
+		false,
+	);
+	const gateResult = evaluateGates(partialSummary, suite.gates);
+
+	const summary: RunSummary = { ...partialSummary, gateResult };
+
+	return {
+		schemaVersion: SCHEMA_VERSION,
+		id: runId,
+		suiteId: suite.name,
+		mode: "judge-only",
+		trials: sortedTrials,
 		summary,
 		timestamp: new Date().toISOString(),
 		configHash: computeConfigHash(suite),
@@ -176,6 +231,7 @@ async function executeCase(
 			caseId: testCase.id,
 			suiteId: suite.name,
 			mode: options.mode,
+			judge: options.judge,
 		},
 	);
 

@@ -41,6 +41,74 @@ export type Run = z.infer<typeof RunSchema>;
 
 // ─── Runtime-only types (not serializable, not Zod-validated) ────────────────
 
+// ─── Judge types (Phase 4) ───────────────────────────────────────────────────
+
+/**
+ * A single message in a judge conversation.
+ * Maps directly to OpenAI/Anthropic/etc message format.
+ */
+export interface JudgeMessage {
+	readonly role: "system" | "user" | "assistant";
+	readonly content: string;
+}
+
+/**
+ * Response from a judge LLM call.
+ * The framework parses this — users return raw text from their LLM call.
+ */
+export interface JudgeResponse {
+	readonly text: string;
+	readonly tokenUsage?: TokenUsage | undefined;
+	readonly cost?: number | undefined;
+	readonly modelId?: string | undefined;
+}
+
+/**
+ * Provider-agnostic judge call function.
+ * Users implement this with their preferred LLM SDK.
+ *
+ * @example OpenAI adapter:
+ * ```ts
+ * const judgeCall: JudgeCallFn = async (messages, options) => {
+ *   const response = await openai.chat.completions.create({
+ *     model: options?.model ?? "gpt-4o",
+ *     messages: messages.map(m => ({ role: m.role, content: m.content })),
+ *     temperature: options?.temperature ?? 0,
+ *   });
+ *   return {
+ *     text: response.choices[0].message.content ?? "",
+ *     tokenUsage: {
+ *       input: response.usage?.prompt_tokens ?? 0,
+ *       output: response.usage?.completion_tokens ?? 0,
+ *     },
+ *   };
+ * };
+ * ```
+ */
+export type JudgeCallFn = (
+	messages: readonly JudgeMessage[],
+	options?: JudgeCallOptions,
+) => Promise<JudgeResponse>;
+
+export interface JudgeCallOptions {
+	readonly temperature?: number | undefined;
+	readonly model?: string | undefined;
+	readonly maxTokens?: number | undefined;
+}
+
+/**
+ * Judge configuration in EvalConfig.
+ * Attached at the config level (not per-grader) so all LLM graders share one judge.
+ */
+export interface JudgeConfig {
+	readonly call: JudgeCallFn;
+	readonly model?: string | undefined;
+	readonly temperature?: number | undefined;
+	readonly maxTokens?: number | undefined;
+}
+
+// ─── Target ──────────────────────────────────────────────────────────────────
+
 export type Target = (input: CaseInput) => Promise<TargetOutput>;
 
 export type GraderFn = (
@@ -54,6 +122,7 @@ export interface GraderContext {
 	readonly suiteId: string;
 	readonly mode: RunMode;
 	readonly graderName: string;
+	readonly judge?: JudgeCallFn | undefined;
 }
 
 export interface GraderConfig {
@@ -85,6 +154,7 @@ export interface EvalConfig {
 				readonly rateLimit?: number | undefined;
 		  }
 		| undefined;
+	readonly judge?: JudgeConfig | undefined;
 }
 
 /** A suite with cases fully resolved (loaded from files if needed). */
@@ -111,11 +181,13 @@ export interface RunOptions {
 	readonly concurrency?: number | undefined;
 	readonly signal?: AbortSignal | undefined;
 	readonly previousRunId?: string | undefined;
+	readonly previousRun?: Run | undefined;
 	readonly strictFixtures?: boolean | undefined;
 	readonly fixtureDir?: string | undefined;
 	readonly runDir?: string | undefined;
 	readonly trials?: number | undefined;
 	readonly rateLimiter?: RateLimiter | undefined;
+	readonly judge?: JudgeCallFn | undefined;
 }
 
 export interface RunMeta {

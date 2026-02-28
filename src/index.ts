@@ -1,5 +1,16 @@
 export const VERSION = "0.0.1";
 
+// Comparison
+export { type CompareOptions, compareRuns } from "./comparison/compare.js";
+export { type ComparisonFormatOptions, formatComparisonReport } from "./comparison/format.js";
+export type {
+	CaseComparison,
+	CategoryComparisonSummary,
+	ChangeDirection,
+	ComparisonSummary,
+	GraderChange,
+	RunComparison,
+} from "./comparison/types.js";
 // Config
 export { defineConfig } from "./config/define-config.js";
 export type { LoadConfigOptions, ValidatedConfig } from "./config/loader.js";
@@ -44,6 +55,11 @@ export type {
 	GraderContext,
 	GraderFactory,
 	GraderFn,
+	JudgeCallFn,
+	JudgeCallOptions,
+	JudgeConfig,
+	JudgeMessage,
+	JudgeResponse,
 	RateLimiter,
 	ResolvedSuite,
 	Run,
@@ -59,6 +75,9 @@ export type {
 	Trial,
 	TrialStats,
 } from "./config/types.js";
+// LLM Graders
+export { factuality } from "./graders/llm/factuality.js";
+export { llmRubric } from "./graders/llm/llm-rubric.js";
 // Plugin
 export type { EvalPlugin } from "./plugin/types.js";
 // Reporters

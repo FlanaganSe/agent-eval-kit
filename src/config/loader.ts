@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { loadConfig as loadC12Config } from "c12";
 import { loadCases } from "./case-loader.js";
-import type { EvalConfig, ResolvedSuite, RunMode, SuiteConfig } from "./types.js";
+import type { EvalConfig, JudgeConfig, ResolvedSuite, RunMode, SuiteConfig } from "./types.js";
 
 export interface LoadConfigOptions {
 	readonly configPath?: string | undefined;
@@ -15,6 +15,7 @@ export interface ValidatedConfig {
 		readonly timeoutMs: number;
 		readonly rateLimit?: number | undefined;
 	};
+	readonly judge?: JudgeConfig | undefined;
 }
 
 /**
@@ -46,6 +47,7 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 			timeoutMs: config.run?.timeoutMs ?? 30_000,
 			rateLimit: config.run?.rateLimit,
 		},
+		judge: config.judge,
 	};
 }
 

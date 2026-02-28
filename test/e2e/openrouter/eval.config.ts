@@ -61,10 +61,7 @@ export default defineConfig({
 					input: { prompt: "What is the capital of France? Reply with only the city name." },
 				},
 			],
-			defaultGraders: [
-				{ grader: contains("Paris"), required: true },
-				{ grader: latency(15_000) },
-			],
+			defaultGraders: [{ grader: contains("Paris"), required: true }, { grader: latency(15_000) }],
 			gates: {
 				passRate: 1.0,
 				p95LatencyMs: 15_000,
@@ -88,7 +85,8 @@ export default defineConfig({
 				{
 					id: "color-list",
 					input: {
-						prompt: "List the three primary colors of light, comma-separated. Reply with only the list.",
+						prompt:
+							"List the three primary colors of light, comma-separated. Reply with only the list.",
 					},
 					category: "happy_path",
 				},

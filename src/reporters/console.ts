@@ -46,6 +46,17 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 				lines.push(`       ${c.dim(`→ ${grade.graderName}: ${grade.reason}`)}`);
 			}
 		}
+
+		// Show judge reasoning in verbose mode for LLM grader results
+		if (options?.verbose) {
+			for (const grade of firstTrial.grades) {
+				const reasoning = grade.metadata?.reasoning;
+				if (typeof reasoning === "string" && reasoning.length > 0) {
+					lines.push(`       ${c.dim(`→ ${grade.graderName}: ${grade.reason}`)}`);
+					lines.push(`         ${c.dim(`Reasoning: ${reasoning.slice(0, 200)}`)}`);
+				}
+			}
+		}
 	}
 
 	lines.push("");
@@ -79,9 +90,18 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 		lines.push(`Results: ${parts.join(" | ")}`);
 	}
 
-	lines.push(
-		`Cost: $${run.summary.totalCost.toFixed(4)} | Duration: ${run.summary.totalDurationMs}ms`,
-	);
+	// Compute judge cost from grade metadata
+	const judgeCost = computeJudgeCost(run);
+	if (judgeCost > 0) {
+		const targetCost = run.summary.totalCost;
+		lines.push(
+			`Cost: $${targetCost.toFixed(4)} (target) + $${judgeCost.toFixed(4)} (judge) = $${(targetCost + judgeCost).toFixed(4)} total | Duration: ${run.summary.totalDurationMs}ms`,
+		);
+	} else {
+		lines.push(
+			`Cost: $${run.summary.totalCost.toFixed(4)} | Duration: ${run.summary.totalDurationMs}ms`,
+		);
+	}
 
 	// Gate result
 	const gateLabel = run.summary.gateResult.pass ? c.green("PASS") : c.red("FAIL");
@@ -187,6 +207,23 @@ function formatTrialStatLine(
 	const flakyTag = stats.flaky ? c.yellow(" (flaky)") : "";
 
 	return `  ${icon} ${caseId.padEnd(6)}${flakyTag} ${passLabel.padEnd(14)} ${c.dim(ciLabel)} ${c.dim(latency.padStart(8))} ${c.dim(cost.padStart(8))}`;
+}
+
+/**
+ * Sums judge costs from grade metadata across all trials.
+ * Returns 0 if no judge costs exist.
+ */
+function computeJudgeCost(run: Run): number {
+	let total = 0;
+	for (const trial of run.trials) {
+		for (const grade of trial.grades) {
+			const cost = grade.metadata?.judgeCost;
+			if (typeof cost === "number") {
+				total += cost;
+			}
+		}
+	}
+	return total;
 }
 
 type Colors = typeof pc;

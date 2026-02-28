@@ -2,12 +2,12 @@ import { appendFile, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { defineCommand } from "citty";
 import { loadConfig, type ValidatedConfig } from "../../config/loader.js";
-import type { ResolvedSuite, Run, RunOptions } from "../../config/types.js";
+import type { JudgeCallFn, ResolvedSuite, Run, RunOptions } from "../../config/types.js";
 import { formatConsoleReport, formatMarkdownSummary } from "../../reporters/console.js";
 import type { RateLimiter } from "../../runner/rate-limiter.js";
 import { createTokenBucketLimiter } from "../../runner/rate-limiter.js";
 import { runSuite } from "../../runner/runner.js";
-import { saveRun } from "../../storage/run-store.js";
+import { loadRun, saveRun } from "../../storage/run-store.js";
 import { ConfigError, getExitCode } from "../errors.js";
 import {
 	filterCases,
@@ -43,6 +43,8 @@ export function buildRunOptions(
 	suite: ResolvedSuite,
 	signal: AbortSignal,
 	rateLimiter?: RateLimiter,
+	judge?: JudgeCallFn,
+	previousRun?: Run,
 ): RunOptions {
 	const mode = (args.mode ?? configDefaults.defaultMode ?? "replay") as RunOptions["mode"];
 	return {
@@ -52,9 +54,11 @@ export function buildRunOptions(
 		concurrency: parseIntArg(args.concurrency, "concurrency") ?? suite.concurrency,
 		signal,
 		previousRunId: args["run-id"],
+		previousRun,
 		strictFixtures: args["strict-fixtures"] || undefined,
 		trials: parseIntArg(args.trials, "trials"),
 		rateLimiter,
+		judge,
 	};
 }
 
@@ -138,8 +142,25 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 			rateLimiter = createTokenBucketLimiter({ maxRequestsPerMinute: rateLimitRpm });
 		}
 
+		// Load previous run for judge-only mode
+		let previousRun: Run | undefined;
+		if (effectiveMode === "judge-only") {
+			if (!args["run-id"]) {
+				throw new ConfigError("--mode=judge-only requires --run-id=<id>");
+			}
+			previousRun = await loadRun(args["run-id"]);
+		}
+
 		for (const rawSuite of suites) {
 			let suite = rawSuite;
+
+			// Validate previousRun matches this suite
+			if (previousRun && previousRun.suiteId !== suite.name) {
+				logger.warn(
+					`Skipping suite '${suite.name}': --run-id references suite '${previousRun.suiteId}'`,
+				);
+				continue;
+			}
 
 			// Apply case filters
 			if (args["filter-failing"]) {
@@ -167,6 +188,8 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 				suite,
 				controller.signal,
 				rateLimiter,
+				validatedConfig.judge?.call,
+				previousRun,
 			);
 			const run = await runSuite(suite, options);
 

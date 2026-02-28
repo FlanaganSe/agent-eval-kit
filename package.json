@@ -18,6 +18,10 @@
 			"types": "./dist/graders/index.d.ts",
 			"default": "./dist/graders/index.js"
 		},
+		"./comparison": {
+			"types": "./dist/comparison/compare.d.ts",
+			"default": "./dist/comparison/compare.js"
+		},
 		"./plugin": {
 			"types": "./dist/plugin/types.d.ts",
 			"default": "./dist/plugin/types.js"

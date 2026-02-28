@@ -1,74 +1,120 @@
 # E2E Smoke Evals
 
-Calls a real LLM and grades the response. Proves the full pipeline:
+Calls real LLMs and grades the responses. Proves the full pipeline works:
 config → target → graders → gates → report → storage.
-
-Two configs are provided — pick whichever matches your API key.
-
-## Directory layout
 
 ```
 test/e2e/
-├── anthropic/eval.config.ts   # Anthropic API direct (needs ANTHROPIC_API_KEY)
-├── openrouter/eval.config.ts  # OpenRouter — any model (needs OPENROUTER_API_KEY)
+├── openrouter/              Deterministic graders (contains, latency)
+├── openrouter-judge/        LLM-as-judge graders (llmRubric, factuality, mixed)
+├── anthropic/               Anthropic API direct (same cases as openrouter/)
 └── README.md
 ```
 
----
-
-## OpenRouter (any model)
+## Setup
 
 ```bash
-# Setup
+# OpenRouter (recommended — works with any model)
 export OPENROUTER_API_KEY=sk-or-...
-pnpm build
 
-# Run (default model: bytedance-seed/seed-2.0-mini)
+# Or Anthropic direct
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Build (required before any run)
+pnpm build
+```
+
+## Run
+
+```bash
+# Deterministic graders — proves core pipeline
 node dist/cli/index.js run --config test/e2e/openrouter
 
-# Use a different model
-EVAL_MODEL=anthropic/claude-haiku-4.5 node dist/cli/index.js run --config test/e2e/openrouter
+# LLM judge graders — proves judge pipeline (2 LLM calls per case: target + judge)
+node dist/cli/index.js run --config test/e2e/openrouter-judge
+
+# Anthropic direct
+node dist/cli/index.js run --config test/e2e/anthropic
+```
+
+## What each config tests
+
+### `openrouter/` — deterministic graders
+
+Sends prompts to an LLM, grades responses with `contains()` and `latency()`.
+Proves: config loading, target execution, deterministic grading, gates, run storage.
+
+### `openrouter-judge/` — LLM judge graders
+
+Sends prompts to a **target** LLM, then sends the responses to a **judge** LLM that scores them 1-4 against criteria you define in English.
+
+Three suites, each testing a different grading pattern:
+
+| Suite | Graders | What it proves |
+|-------|---------|----------------|
+| `rubric` | `llmRubric("criteria...")` | Judge scores output against open-ended criteria. No expected answer needed. |
+| `factuality` | `factuality()` | Judge checks output against a known reference in `expected.text`. |
+| `mixed` | `contains()` + `llmRubric()` | Deterministic and LLM graders compose in the same suite. |
+
+```bash
+# Run a single suite
+node dist/cli/index.js run --config test/e2e/openrouter-judge --suite rubric
+```
+
+### `anthropic/` — Anthropic API direct
+
+Same cases and graders as `openrouter/`. Uses the Anthropic SDK instead of OpenAI SDK.
+
+## Override models
+
+```bash
+# Target model (openrouter configs only)
 EVAL_MODEL=google/gemini-2.0-flash-001 node dist/cli/index.js run --config test/e2e/openrouter
-EVAL_MODEL=meta-llama/llama-4-scout node dist/cli/index.js run --config test/e2e/openrouter
+
+# Target + judge models (openrouter-judge only)
+EVAL_MODEL=anthropic/claude-haiku-4.5 JUDGE_MODEL=anthropic/claude-sonnet-4 \
+  node dist/cli/index.js run --config test/e2e/openrouter-judge
 ```
 
 Find model IDs at [openrouter.ai/models](https://openrouter.ai/models).
 
-## Anthropic (direct)
+## CLI flags
+
+All flags work with any config.
 
 ```bash
-# Setup
-export ANTHROPIC_API_KEY=sk-ant-...
-pnpm build
-
-# Run (uses claude-haiku-4-5-20251001)
-node dist/cli/index.js run --config test/e2e/anthropic
+node dist/cli/index.js run --config <config> --suite content-check   # Single suite
+node dist/cli/index.js run --config <config> --filter capital-france  # Single case
+node dist/cli/index.js run --config <config> --trials 3               # Flakiness detection
+node dist/cli/index.js run --config <config> --rate-limit 30          # Requests per minute
+node dist/cli/index.js run --config <config> --concurrency 2          # Max parallel cases
 ```
 
----
+## Judge-only re-grading
 
-## CLI flags to try
-
-All flags work with either config. Replace `<config>` with the path you're using.
+Re-run judge graders on a previous run's outputs without calling the target again.
+Useful for iterating on rubric criteria.
 
 ```bash
-# Single suite
-node dist/cli/index.js run --config <config> --suite content-check
+# 1. Run live
+node dist/cli/index.js run --config test/e2e/openrouter-judge
 
-# Single case
-node dist/cli/index.js run --config <config> --filter capital-france
+# 2. Re-grade with same or updated criteria (no target cost)
+node dist/cli/index.js run --config test/e2e/openrouter-judge --mode=judge-only --run-id=<id>
+```
 
-# Trials (flakiness detection)
-node dist/cli/index.js run --config <config> --trials 3
+## Compare runs
 
-# Rate limiting (requests per minute)
-node dist/cli/index.js run --config <config> --rate-limit 30
+```bash
+node dist/cli/index.js compare --base <run-id-1> --compare <run-id-2>
+```
 
-# Concurrency
-node dist/cli/index.js run --config <config> --concurrency 2
+## Other commands
 
-# Combine
-node dist/cli/index.js run --config <config> --trials 3 --rate-limit 30 --suite pipeline
+```bash
+node dist/cli/index.js list                                        # List previous runs
+node dist/cli/index.js doctor                                      # Validate environment
+node dist/cli/index.js run --config <config> --filter-failing <id> # Re-run only failures
 ```
 
 ## Exit codes
@@ -81,53 +127,6 @@ node dist/cli/index.js run --config <config> --trials 3 --rate-limit 30 --suite 
 | 3    | Runtime/target error |
 | 130  | Ctrl+C / aborted     |
 
-```bash
-node dist/cli/index.js run --config <config>; echo "Exit: $?"
-```
-
-## Other commands
-
-```bash
-# List previous runs
-node dist/cli/index.js list
-
-# Validate environment
-node dist/cli/index.js doctor
-
-# Re-run only failures from a previous run
-node dist/cli/index.js run --config <config> --filter-failing <run-id>
-```
-
-## SIGINT test
-
-```bash
-node dist/cli/index.js run --config <config> --trials 10
-# Press Ctrl+C mid-run — should exit 130
-```
-
-## stdout/stderr separation
-
-```bash
-# stderr only (human-readable report)
-node dist/cli/index.js run --config <config> 1>/dev/null
-
-# stdout only (machine-readable)
-node dist/cli/index.js run --config <config> 2>/dev/null
-```
-
-## GitHub Actions summary
-
-```bash
-GITHUB_STEP_SUMMARY=/tmp/summary.md node dist/cli/index.js run --config <config>
-cat /tmp/summary.md
-```
-
 ## Cost
 
-Each full run is 4 cases. With Haiku or similarly cheap models, a run costs fractions of a cent. `--trials N` multiplies invocations by N.
-
-## Modifying
-
-Each `eval.config.ts` is a standalone file. To add cases, graders, or suites, edit the config directly. The framework resolves the config at runtime — no code generation or build step needed beyond `pnpm build`.
-
-The `target` function is just `(input) => Promise<TargetOutput>`. Swap the SDK, the model, or the entire provider — the framework only sees what comes back.
+Each run with Haiku costs fractions of a cent. Judge configs double the calls (target + judge). `--trials N` multiplies by N.

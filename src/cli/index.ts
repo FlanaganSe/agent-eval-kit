@@ -10,6 +10,7 @@ const main = defineCommand({
 	subCommands: {
 		run: () => import("./commands/run.js").then((m) => m.default),
 		record: () => import("./commands/record.js").then((m) => m.default),
+		compare: () => import("./commands/compare.js").then((m) => m.default),
 		list: () => import("./commands/list.js").then((m) => m.default),
 		cache: () => import("./commands/cache.js").then((m) => m.default),
 		doctor: () => import("./commands/doctor.js").then((m) => m.default),

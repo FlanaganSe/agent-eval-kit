@@ -155,6 +155,110 @@ describe("formatConsoleReport", () => {
 		const output = formatConsoleReport(run, { color: false });
 		expect(output).toContain("aborted");
 	});
+
+	it("shows judge reasoning in verbose mode for LLM grader results", () => {
+		const run = makeRun({
+			trials: [
+				{
+					caseId: "J01",
+					status: "pass",
+					output: { latencyMs: 100, cost: 0.001 },
+					grades: [
+						{
+							pass: true,
+							score: 0.75,
+							reason: "Score 3/4: Good response",
+							graderName: "llm-rubric",
+							metadata: { reasoning: "The output correctly addresses the question." },
+						},
+					],
+					score: 0.75,
+					durationMs: 100,
+				},
+			],
+			summary: {
+				...makeRun().summary,
+				totalCases: 1,
+				passed: 1,
+				failed: 0,
+			},
+		});
+		const output = formatConsoleReport(run, { color: false, verbose: true });
+		expect(output).toContain("Reasoning:");
+		expect(output).toContain("correctly addresses");
+	});
+
+	it("does not show reasoning without verbose flag", () => {
+		const run = makeRun({
+			trials: [
+				{
+					caseId: "J01",
+					status: "pass",
+					output: { latencyMs: 100, cost: 0.001 },
+					grades: [
+						{
+							pass: true,
+							score: 0.75,
+							reason: "Score 3/4: Good",
+							graderName: "llm-rubric",
+							metadata: { reasoning: "Some reasoning text" },
+						},
+					],
+					score: 0.75,
+					durationMs: 100,
+				},
+			],
+			summary: {
+				...makeRun().summary,
+				totalCases: 1,
+				passed: 1,
+				failed: 0,
+			},
+		});
+		const output = formatConsoleReport(run, { color: false });
+		expect(output).not.toContain("Reasoning:");
+	});
+
+	it("shows judge cost separately when judge grades have cost metadata", () => {
+		const run = makeRun({
+			trials: [
+				{
+					caseId: "J01",
+					status: "pass",
+					output: { latencyMs: 100, cost: 0.005 },
+					grades: [
+						{
+							pass: true,
+							score: 1,
+							reason: "ok",
+							graderName: "llm-rubric",
+							metadata: { judgeCost: 0.002 },
+						},
+					],
+					score: 1,
+					durationMs: 100,
+				},
+			],
+			summary: {
+				...makeRun().summary,
+				totalCases: 1,
+				passed: 1,
+				failed: 0,
+				totalCost: 0.005,
+			},
+		});
+		const output = formatConsoleReport(run, { color: false });
+		expect(output).toContain("(target)");
+		expect(output).toContain("(judge)");
+		expect(output).toContain("total");
+	});
+
+	it("no change to cost line when no judge grades", () => {
+		const output = formatConsoleReport(makeRun(), { color: false });
+		expect(output).not.toContain("(target)");
+		expect(output).not.toContain("(judge)");
+		expect(output).toContain("Cost: $");
+	});
 });
 
 describe("formatMarkdownSummary", () => {

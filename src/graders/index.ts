@@ -17,6 +17,9 @@ export { toolArgsMatch } from "./deterministic/tool-args-match.js";
 // Tool call graders
 export { toolCalled, toolNotCalled } from "./deterministic/tool-called.js";
 export { toolSequence } from "./deterministic/tool-sequence.js";
+// LLM graders
+export { type FactualityOptions, factuality } from "./llm/factuality.js";
+export { type LlmRubricExample, type LlmRubricOptions, llmRubric } from "./llm/llm-rubric.js";
 
 // Scoring
 export { computeCaseResult } from "./scoring.js";

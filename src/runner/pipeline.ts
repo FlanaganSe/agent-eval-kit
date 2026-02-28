@@ -3,6 +3,7 @@ import type {
 	GradeResult,
 	GraderConfig,
 	GraderContext,
+	JudgeCallFn,
 	RunMode,
 	TargetOutput,
 } from "../config/types.js";
@@ -18,6 +19,7 @@ export interface PipelineContext {
 	readonly caseId: string;
 	readonly suiteId: string;
 	readonly mode: RunMode;
+	readonly judge?: JudgeCallFn | undefined;
 }
 
 /**
@@ -43,6 +45,7 @@ export async function runGraderPipeline(
 			suiteId: context.suiteId,
 			mode: context.mode,
 			graderName: "", // Grader sets this in its result
+			judge: context.judge,
 		};
 
 		const grade = await config.grader(output, expected, graderContext);
