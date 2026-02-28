@@ -1,102 +1,133 @@
-# E2E Smoke Eval
+# E2E Smoke Evals
 
-Calls a real LLM and grades the response. Proves the full pipeline works:
+Calls a real LLM and grades the response. Proves the full pipeline:
 config → target → graders → gates → report → storage.
 
-## Setup
+Two configs are provided — pick whichever matches your API key.
+
+## Directory layout
+
+```
+test/e2e/
+├── anthropic/eval.config.ts   # Anthropic API direct (needs ANTHROPIC_API_KEY)
+├── openrouter/eval.config.ts  # OpenRouter — any model (needs OPENROUTER_API_KEY)
+└── README.md
+```
+
+---
+
+## OpenRouter (any model)
 
 ```bash
-# 1. Install the Anthropic SDK (dev dependency — does not ship with the lib)
-pnpm add -D @anthropic-ai/sdk
-
-# 2. Set your API key
-export ANTHROPIC_API_KEY=sk-ant-...
-
-# 3. Build
+# Setup
+export OPENROUTER_API_KEY=sk-or-...
 pnpm build
+
+# Run (default model: bytedance-seed/seed-2.0-mini)
+node dist/cli/index.js run --config test/e2e/openrouter
+
+# Use a different model
+EVAL_MODEL=anthropic/claude-haiku-4.5 node dist/cli/index.js run --config test/e2e/openrouter
+EVAL_MODEL=google/gemini-2.0-flash-001 node dist/cli/index.js run --config test/e2e/openrouter
+EVAL_MODEL=meta-llama/llama-4-scout node dist/cli/index.js run --config test/e2e/openrouter
 ```
 
-## Run
+Find model IDs at [openrouter.ai/models](https://openrouter.ai/models).
+
+## Anthropic (direct)
 
 ```bash
-# Basic run — executes all suites
-node dist/cli/index.js run --config test/e2e
+# Setup
+export ANTHROPIC_API_KEY=sk-ant-...
+pnpm build
 
+# Run (uses claude-haiku-4-5-20251001)
+node dist/cli/index.js run --config test/e2e/anthropic
+```
+
+---
+
+## CLI flags to try
+
+All flags work with either config. Replace `<config>` with the path you're using.
+
+```bash
 # Single suite
-node dist/cli/index.js run --config test/e2e --suite content-check
+node dist/cli/index.js run --config <config> --suite content-check
 
-# Single case by ID
-node dist/cli/index.js run --config test/e2e --filter capital-france
+# Single case
+node dist/cli/index.js run --config <config> --filter capital-france
 
-# Multiple trials (flakiness detection)
-node dist/cli/index.js run --config test/e2e --trials 3
+# Trials (flakiness detection)
+node dist/cli/index.js run --config <config> --trials 3
 
-# Rate-limited (requests per minute)
-node dist/cli/index.js run --config test/e2e --rate-limit 30
+# Rate limiting (requests per minute)
+node dist/cli/index.js run --config <config> --rate-limit 30
 
-# Concurrency control
-node dist/cli/index.js run --config test/e2e --concurrency 2
+# Concurrency
+node dist/cli/index.js run --config <config> --concurrency 2
 
-# Combine flags
-node dist/cli/index.js run --config test/e2e --trials 3 --rate-limit 30 --suite pipeline
+# Combine
+node dist/cli/index.js run --config <config> --trials 3 --rate-limit 30 --suite pipeline
 ```
 
-## What to expect
+## Exit codes
 
-| Exit code | Meaning |
-| --------- | ---------------------- |
-| 0 | All gates passed |
-| 1 | A gate failed |
-| 2 | Config error |
-| 3 | Runtime / target error |
-| 130 | Ctrl+C / aborted |
-
-Check the exit code after a run:
+| Code | Meaning              |
+| ---- | -------------------- |
+| 0    | All gates passed     |
+| 1    | A gate failed        |
+| 2    | Config error         |
+| 3    | Runtime/target error |
+| 130  | Ctrl+C / aborted     |
 
 ```bash
-node dist/cli/index.js run --config test/e2e; echo "Exit: $?"
+node dist/cli/index.js run --config <config>; echo "Exit: $?"
 ```
 
-## Verify SIGINT handling
-
-Start a run and press Ctrl+C — it should abort gracefully and exit 130.
-
-## Verify stdout/stderr separation
+## Other commands
 
 ```bash
-# Human-readable report only (stderr)
-node dist/cli/index.js run --config test/e2e 1>/dev/null
-
-# Machine-readable output only (stdout)
-node dist/cli/index.js run --config test/e2e 2>/dev/null
-```
-
-## Verify GitHub Actions summary
-
-```bash
-GITHUB_STEP_SUMMARY=/tmp/summary.md node dist/cli/index.js run --config test/e2e
-cat /tmp/summary.md
-```
-
-## Other commands to test
-
-```bash
-# List previous runs (shows runs from .eval-runs/)
+# List previous runs
 node dist/cli/index.js list
 
-# Doctor — validates environment and config
+# Validate environment
 node dist/cli/index.js doctor
 
-# Re-run only failing cases from a previous run
-node dist/cli/index.js run --config test/e2e --filter-failing <run-id>
+# Re-run only failures from a previous run
+node dist/cli/index.js run --config <config> --filter-failing <run-id>
+```
+
+## SIGINT test
+
+```bash
+node dist/cli/index.js run --config <config> --trials 10
+# Press Ctrl+C mid-run — should exit 130
+```
+
+## stdout/stderr separation
+
+```bash
+# stderr only (human-readable report)
+node dist/cli/index.js run --config <config> 1>/dev/null
+
+# stdout only (machine-readable)
+node dist/cli/index.js run --config <config> 2>/dev/null
+```
+
+## GitHub Actions summary
+
+```bash
+GITHUB_STEP_SUMMARY=/tmp/summary.md node dist/cli/index.js run --config <config>
+cat /tmp/summary.md
 ```
 
 ## Cost
 
-Each full run (4 cases × Haiku) costs fractions of a cent. Running with `--trials 3` triples the invocations.
+Each full run is 4 cases. With Haiku or similarly cheap models, a run costs fractions of a cent. `--trials N` multiplies invocations by N.
 
-## Adapting for other providers
+## Modifying
 
-The target function in `eval.config.ts` is a plain async function returning `TargetOutput`.
-Swap the function body to use OpenAI, OpenRouter, or any other SDK —
-the framework doesn't care how the target produces its output.
+Each `eval.config.ts` is a standalone file. To add cases, graders, or suites, edit the config directly. The framework resolves the config at runtime — no code generation or build step needed beyond `pnpm build`.
+
+The `target` function is just `(input) => Promise<TargetOutput>`. Swap the SDK, the model, or the entire provider — the framework only sees what comes back.
