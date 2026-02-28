@@ -3,17 +3,17 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
 	site: "https://flanaganse.github.io",
-	base: "/agent-evals",
+	base: "/agent-eval-kit",
 	integrations: [
 		starlight({
-			title: "agent-evals",
+			title: "agent-eval-kit",
 			description:
 				"TypeScript-native eval framework for AI agent workflows",
 			social: [
 				{
 					icon: "github",
 					label: "GitHub",
-					href: "https://github.com/FlanaganSe/agent-evals",
+					href: "https://github.com/FlanaganSe/agent-eval-kit",
 				},
 			],
 			sidebar: [

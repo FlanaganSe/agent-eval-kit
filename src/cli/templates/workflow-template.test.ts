@@ -72,6 +72,6 @@ describe("generateWorkflowTemplate", () => {
 	it("generates npm setup when packageRunner is npx", () => {
 		const output = generateWorkflowTemplate(makeAnswers({ packageRunner: "npx" }));
 		expect(output).toContain("npm ci");
-		expect(output).toContain("npx agent-evals run");
+		expect(output).toContain("npx agent-eval-kit run");
 	});
 });

@@ -5,12 +5,12 @@ description: Deep dive on the fixture-based record-replay engine
 
 ## Overview
 
-The record-replay engine captures your target's responses as fixtures and replays them for instant, zero-cost eval runs. This is the core differentiator of agent-evals.
+The record-replay engine captures your target's responses as fixtures and replays them for instant, zero-cost eval runs. This is the core differentiator of agent-eval-kit.
 
 ## Recording fixtures
 
 ```bash
-agent-evals run --mode=live --record --suite=smoke
+agent-eval-kit run --mode=live --record --suite=smoke
 ```
 
 This calls your target for each case and saves the response to `.eval-fixtures/smoke/<case-id>.jsonl`.
@@ -18,7 +18,7 @@ This calls your target for each case and saves the response to `.eval-fixtures/s
 ## Replaying from fixtures
 
 ```bash
-agent-evals run --mode=replay --suite=smoke
+agent-eval-kit run --mode=replay --suite=smoke
 ```
 
 In replay mode, the target function is never called. Responses are loaded from fixtures and graded.
@@ -66,10 +66,10 @@ Use `--strict-fixtures` to fail on stale fixtures instead of warning.
 
 ```bash
 # Re-record all fixtures
-agent-evals run --update-fixtures --suite=smoke
+agent-eval-kit run --update-fixtures --suite=smoke
 
 # Equivalent to:
-agent-evals run --mode=live --record --suite=smoke
+agent-eval-kit run --mode=live --record --suite=smoke
 ```
 
 ## Stripping raw responses

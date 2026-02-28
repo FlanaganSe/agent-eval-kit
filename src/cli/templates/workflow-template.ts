@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 ${generateSetupSteps(r)}
-      - run: ${runCmd} agent-evals run --mode=replay${reporterFlag}${outputFlag}
+      - run: ${runCmd} agent-eval-kit run --mode=replay${reporterFlag}${outputFlag}
         name: Run evals (replay mode)
 ${reporter === "junit" ? generateJunitStep() : ""}`;
 }

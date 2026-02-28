@@ -7,7 +7,7 @@ import type { AgentFramework, InitAnswers, ReporterChoice } from "./types.js";
 export function generateConfigTemplate(answers: InitAnswers): string {
 	const lines: string[] = [];
 
-	lines.push('import { defineConfig } from "agent-evals";');
+	lines.push('import { defineConfig } from "agent-eval-kit";');
 	lines.push("");
 	lines.push("export default defineConfig({");
 	lines.push("  suites: [");

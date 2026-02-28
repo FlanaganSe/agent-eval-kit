@@ -46,7 +46,7 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 
 	if (!config || !config.suites || config.suites.length === 0) {
 		throw new Error(
-			"No eval.config.ts found or config has no suites. Run 'agent-evals init' to create one.",
+			"No eval.config.ts found or config has no suites. Run 'agent-eval-kit init' to create one.",
 		);
 	}
 

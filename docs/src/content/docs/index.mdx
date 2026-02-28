@@ -1,22 +1,22 @@
 ---
-title: agent-evals
+title: agent-eval-kit
 description: TypeScript-native eval framework for AI agent workflows
 template: splash
 hero:
   tagline: Record-replay, deterministic graders, LLM-as-judge, CI integration. Ship confident AI agents with $0 pre-push evals.
   actions:
     - text: Get Started
-      link: /agent-evals/getting-started/quick-start/
+      link: /agent-eval-kit/getting-started/quick-start/
       icon: right-arrow
     - text: View on GitHub
-      link: https://github.com/FlanaganSe/agent-evals
+      link: https://github.com/FlanaganSe/agent-eval-kit
       variant: minimal
       icon: external
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Why agent-evals?
+## Why agent-eval-kit?
 
 <CardGrid stagger>
   <Card title="Record & Replay" icon="pencil">
@@ -37,7 +37,7 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ```typescript
 // eval.config.ts
-import { defineConfig } from "agent-evals";
+import { defineConfig } from "agent-eval-kit";
 
 export default defineConfig({
   suites: {
@@ -59,11 +59,11 @@ export default defineConfig({
 
 ```bash
 # Record fixtures (calls your agent once)
-agent-evals run --mode=live --record --suite=smoke
+agent-eval-kit run --mode=live --record --suite=smoke
 
 # Replay from fixtures (instant, $0)
-agent-evals run --mode=replay --suite=smoke
+agent-eval-kit run --mode=replay --suite=smoke
 
 # Watch mode for development
-agent-evals run --watch --mode=replay --suite=smoke
+agent-eval-kit run --watch --mode=replay --suite=smoke
 ```

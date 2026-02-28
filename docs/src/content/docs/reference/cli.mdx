@@ -1,6 +1,6 @@
 ---
 title: CLI Reference
-description: Complete reference for all agent-evals CLI commands and flags
+description: Complete reference for all agent-eval-kit CLI commands and flags
 ---
 
 ## Global flags
@@ -17,7 +17,7 @@ description: Complete reference for all agent-evals CLI commands and flags
 Execute an eval suite against the target function.
 
 ```bash
-agent-evals run [options]
+agent-eval-kit run [options]
 ```
 
 | Flag | Type | Default | Description |
@@ -39,7 +39,7 @@ agent-evals run [options]
 Shorthand for `run --mode=live --record`.
 
 ```bash
-agent-evals record --suite=smoke
+agent-eval-kit record --suite=smoke
 ```
 
 ### `compare`
@@ -47,7 +47,7 @@ agent-evals record --suite=smoke
 Compare two eval runs side-by-side.
 
 ```bash
-agent-evals compare --base=<run-id> --compare=<run-id>
+agent-eval-kit compare --base=<run-id> --compare=<run-id>
 ```
 
 | Flag | Type | Description |
@@ -60,7 +60,7 @@ agent-evals compare --base=<run-id> --compare=<run-id>
 List recent eval runs.
 
 ```bash
-agent-evals list
+agent-eval-kit list
 ```
 
 ### `cache`
@@ -72,7 +72,7 @@ Cache management commands.
 Show cache statistics for fixtures and judge cache.
 
 ```bash
-agent-evals cache stats
+agent-eval-kit cache stats
 ```
 
 #### `cache clear`
@@ -80,10 +80,10 @@ agent-evals cache stats
 Clear fixture or judge cache.
 
 ```bash
-agent-evals cache clear              # Clear fixture cache
-agent-evals cache clear --judge      # Clear judge cache only
-agent-evals cache clear --all        # Clear all caches
-agent-evals cache clear --suite=foo  # Clear fixtures for specific suite
+agent-eval-kit cache clear              # Clear fixture cache
+agent-eval-kit cache clear --judge      # Clear judge cache only
+agent-eval-kit cache clear --all        # Clear all caches
+agent-eval-kit cache clear --suite=foo  # Clear fixtures for specific suite
 ```
 
 ### `doctor`
@@ -91,7 +91,7 @@ agent-evals cache clear --suite=foo  # Clear fixtures for specific suite
 Run health checks on your eval setup.
 
 ```bash
-agent-evals doctor
+agent-eval-kit doctor
 ```
 
 ### `init`
@@ -99,7 +99,7 @@ agent-evals doctor
 Initialize a new eval project with config and case files.
 
 ```bash
-agent-evals init
+agent-eval-kit init
 ```
 
 ### `install-hooks`
@@ -107,7 +107,7 @@ agent-evals init
 Install git hooks for pre-push eval checks.
 
 ```bash
-agent-evals install-hooks
+agent-eval-kit install-hooks
 ```
 
 ### `mcp`
@@ -115,7 +115,7 @@ agent-evals install-hooks
 Start the MCP server for AI assistant integration. Exposes 8 tools (list suites, describe config, list graders, validate config, run suites, list runs, compare runs, get run details) and 3 resources (config schema, case schema, grader reference).
 
 ```bash
-agent-evals mcp
+agent-eval-kit mcp
 ```
 
 Requires `@modelcontextprotocol/sdk` to be installed. See [MCP Server](/advanced/mcp-server/) for full tool reference and setup instructions.

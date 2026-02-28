@@ -52,7 +52,7 @@ describe("writeInitFiles", () => {
 	it("creates workflow when selected", async () => {
 		await writeInitFiles(tempDir, makeAnswers({ generateWorkflow: true }));
 		const content = await readFile(join(tempDir, ".github", "workflows", "evals.yml"), "utf-8");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("creates AGENTS.md when selected", async () => {

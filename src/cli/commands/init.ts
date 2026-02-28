@@ -115,7 +115,7 @@ export default defineCommand({
 		}
 
 		// Interactive wizard
-		intro(pc.bold("agent-evals init"));
+		intro(pc.bold("agent-eval-kit init"));
 
 		// Check for existing config
 		if (detections.existingConfig) {
@@ -279,8 +279,8 @@ export default defineCommand({
 				"",
 				`  1. Edit ${pc.cyan("eval.config.ts")} to wire up your agent`,
 				`  2. Edit ${pc.cyan("cases/smoke.jsonl")} with your test cases`,
-				`  3. Run ${pc.cyan(`${r} agent-evals run --mode=live --record`)} to record fixtures`,
-				`  4. Run ${pc.cyan(`${r} agent-evals run`)} for instant replay`,
+				`  3. Run ${pc.cyan(`${r} agent-eval-kit run --mode=live --record`)} to record fixtures`,
+				`  4. Run ${pc.cyan(`${r} agent-eval-kit run`)} for instant replay`,
 			].join("\n"),
 			"Next steps",
 		);

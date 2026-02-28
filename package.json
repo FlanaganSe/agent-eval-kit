@@ -1,22 +1,22 @@
 {
-	"name": "agent-evals",
+	"name": "agent-eval-kit",
 	"version": "0.0.1",
 	"description": "TypeScript-native eval framework for AI agent workflows. Record-replay, deterministic + LLM graders, trajectory evaluation.",
 	"author": "Sean Flanagan <flanspan11@gmail.com>",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/FlanaganSe/agent-evals.git"
+		"url": "git+https://github.com/FlanaganSe/agent-eval-kit.git"
 	},
-	"homepage": "https://github.com/FlanaganSe/agent-evals#readme",
+	"homepage": "https://github.com/FlanaganSe/agent-eval-kit#readme",
 	"bugs": {
-		"url": "https://github.com/FlanaganSe/agent-evals/issues"
+		"url": "https://github.com/FlanaganSe/agent-eval-kit/issues"
 	},
 	"type": "module",
 	"engines": {
 		"node": ">=20.0.0"
 	},
 	"bin": {
-		"agent-evals": "./bin/cli.mjs"
+		"agent-eval-kit": "./bin/cli.mjs"
 	},
 	"exports": {
 		".": {

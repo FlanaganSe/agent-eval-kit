@@ -1,4 +1,4 @@
-# agent-evals
+# agent-eval-kit
 
 > TypeScript-native eval framework for AI agent workflows. Record-replay, deterministic graders, LLM-as-judge, CI integration.
 

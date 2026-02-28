@@ -31,16 +31,16 @@ jobs:
 
       # Replay from recorded fixtures (instant, $0)
       - name: Run evals
-        run: pnpm agent-evals run --mode=replay --suite=smoke
+        run: pnpm agent-eval-kit run --mode=replay --suite=smoke
 
       # Or run live with strict fixtures
       - name: Run evals (strict)
-        run: pnpm agent-evals run --mode=replay --strict-fixtures --suite=smoke
+        run: pnpm agent-eval-kit run --mode=replay --strict-fixtures --suite=smoke
 ```
 
 ## Quality gates in CI
 
-Gates determine the exit code. When a gate fails, `agent-evals run` exits with code 1, failing the CI step.
+Gates determine the exit code. When a gate fails, `agent-eval-kit run` exits with code 1, failing the CI step.
 
 ```typescript
 // eval.config.ts
@@ -59,16 +59,16 @@ Run evals before every push:
 
 ```bash
 # Install git hooks
-agent-evals install-hooks
+agent-eval-kit install-hooks
 ```
 
-This adds a pre-push hook that runs `agent-evals run --mode=replay`. Failed gates block the push.
+This adds a pre-push hook that runs `agent-eval-kit run --mode=replay`. Failed gates block the push.
 
 ## Comparing across branches
 
 ```bash
 # On your PR branch, after running evals:
-agent-evals compare --base=<main-run-id> --compare=<pr-run-id>
+agent-eval-kit compare --base=<main-run-id> --compare=<pr-run-id>
 ```
 
 The comparison highlights regressions, improvements, and score deltas.
@@ -80,7 +80,7 @@ For the initial fixture recording, run in live mode once:
 ```bash
 # Record fixtures (requires API keys)
 OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-  agent-evals run --mode=live --record --suite=smoke
+  agent-eval-kit run --mode=live --record --suite=smoke
 ```
 
 Commit the `.eval-fixtures/` directory to your repository. Subsequent CI runs use replay mode.

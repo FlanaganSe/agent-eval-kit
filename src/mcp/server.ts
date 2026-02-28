@@ -19,7 +19,7 @@ export async function startMcpServer(): Promise<void> {
 	const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
 
 	const server = new McpServer({
-		name: "agent-evals",
+		name: "agent-eval-kit",
 		version: VERSION,
 	});
 
@@ -33,7 +33,7 @@ export async function startMcpServer(): Promise<void> {
 
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
-	console.error(`agent-evals MCP server v${VERSION} started`);
+	console.error(`agent-eval-kit MCP server v${VERSION} started`);
 }
 
 // Use `any` for McpServer type since it's dynamically imported

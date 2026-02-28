@@ -16,22 +16,22 @@ export function generateAgentsMdTemplate(answers: InitAnswers): string {
 
 \`\`\`bash
 # Run all evals (default: replay mode, zero cost)
-${run} agent-evals run
+${run} agent-eval-kit run
 
 # Run evals in live mode (real LLM calls, costs money)
-${run} agent-evals run --mode=live
+${run} agent-eval-kit run --mode=live
 
 # Record fixtures for replay mode
-${run} agent-evals record
+${run} agent-eval-kit record
 
 # Run specific suite
-${run} agent-evals run --suite=smoke
+${run} agent-eval-kit run --suite=smoke
 
 # Compare two runs
-${run} agent-evals compare --base=<runId> --compare=<runId>
+${run} agent-eval-kit compare --base=<runId> --compare=<runId>
 
 # Validate project setup
-${run} agent-evals doctor
+${run} agent-eval-kit doctor
 
 # Run tests
 ${pkgRun} test
@@ -54,7 +54,7 @@ ${answers.evalDir === "." ? "" : `${answers.evalDir}/`}cases/             # Test
 
 ## Eval Framework
 
-- **Framework**: agent-evals (TypeScript, ESM-only)
+- **Framework**: agent-eval-kit (TypeScript, ESM-only)
 - **Config**: \`eval.config.ts\` using \`defineConfig()\`
 - **Modes**: live (real calls), replay (recorded fixtures), judge-only (re-grade)
 - **Graders**: Deterministic (contains, regex, toolCalled, etc.) + LLM-as-judge (llmRubric, factuality)
@@ -71,13 +71,13 @@ ${answers.evalDir === "." ? "" : `${answers.evalDir}/`}cases/             # Test
 ## Boundaries
 
 ### Always OK
-- Running \`${run} agent-evals run\` (replay mode is safe, zero cost)
+- Running \`${run} agent-eval-kit run\` (replay mode is safe, zero cost)
 - Running tests, typecheck, and lint
 - Reading and editing eval config or test cases
 - Adding new graders or test cases
 
 ### Ask First
-- Running \`${run} agent-evals run --mode=live\` (costs money via real API calls)
+- Running \`${run} agent-eval-kit run --mode=live\` (costs money via real API calls)
 - Modifying \`.eval-fixtures/\` (affects replay results)
 - Changing gate thresholds (affects CI pass/fail)
 

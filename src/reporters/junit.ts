@@ -76,7 +76,7 @@ export function formatJunitXml(run: Run): string {
 
 	return [
 		'<?xml version="1.0" encoding="UTF-8"?>',
-		`<testsuites name="agent-evals" tests="${totalTests}" failures="${failures}" errors="${errors}" time="${totalTimeSeconds}">`,
+		`<testsuites name="agent-eval-kit" tests="${totalTests}" failures="${failures}" errors="${errors}" time="${totalTimeSeconds}">`,
 		`  <testsuite name="${escapeXml(run.suiteId)}" tests="${totalTests}" failures="${failures}" errors="${errors}" time="${totalTimeSeconds}" timestamp="${run.timestamp}">`,
 		...testcases,
 		"  </testsuite>",

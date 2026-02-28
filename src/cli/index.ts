@@ -3,7 +3,7 @@ import { VERSION } from "../index.js";
 
 const main = defineCommand({
 	meta: {
-		name: "agent-evals",
+		name: "agent-eval-kit",
 		version: VERSION,
 		description: "Eval framework for AI agent workflows",
 	},

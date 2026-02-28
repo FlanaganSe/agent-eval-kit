@@ -1,11 +1,11 @@
 ---
 title: Core Concepts
-description: Understanding the key concepts in agent-evals
+description: Understanding the key concepts in agent-eval-kit
 ---
 
 ## Terminology
 
-agent-evals uses precise terminology. Understanding these terms makes the documentation and API clearer.
+agent-eval-kit uses precise terminology. Understanding these terms makes the documentation and API clearer.
 
 | Term | Definition |
 |------|-----------|
@@ -24,7 +24,7 @@ agent-evals uses precise terminology. Understanding these terms makes the docume
 Calls your target function for every case. Use this for initial recording and when you need fresh responses.
 
 ```bash
-agent-evals run --mode=live --suite=smoke
+agent-eval-kit run --mode=live --suite=smoke
 ```
 
 ### Replay mode
@@ -32,7 +32,7 @@ agent-evals run --mode=live --suite=smoke
 Loads pre-recorded fixtures instead of calling the target. Instant, deterministic, zero cost.
 
 ```bash
-agent-evals run --mode=replay --suite=smoke
+agent-eval-kit run --mode=replay --suite=smoke
 ```
 
 ### Judge-only mode
@@ -40,12 +40,12 @@ agent-evals run --mode=replay --suite=smoke
 Re-grades a previous run with updated graders. Useful when tuning LLM judge prompts.
 
 ```bash
-agent-evals run --mode=judge-only --run-id=<previous-run-id> --suite=smoke
+agent-eval-kit run --mode=judge-only --run-id=<previous-run-id> --suite=smoke
 ```
 
 ## Graders
 
-Graders are functions that score outputs. agent-evals ships 20 built-in graders in three tiers:
+Graders are functions that score outputs. agent-eval-kit ships 20 built-in graders in three tiers:
 
 ### Deterministic graders
 Fast, free, reproducible. Pure functions with no I/O. Examples: `contains`, `exactMatch`, `regex`, `jsonSchema`, `toolCalled`, `toolSequence`, `latency`, `cost`, `safetyKeywords`, `noHallucinatedNumbers`.

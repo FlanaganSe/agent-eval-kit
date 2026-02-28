@@ -22,7 +22,7 @@ describe("generateAgentsMdTemplate", () => {
 	it("contains commands section with package runner", () => {
 		const output = generateAgentsMdTemplate(makeAnswers());
 		expect(output).toContain("## Commands");
-		expect(output).toContain("pnpm agent-evals run");
+		expect(output).toContain("pnpm agent-eval-kit run");
 		expect(output).toContain("pnpm test");
 	});
 
@@ -54,7 +54,7 @@ describe("generateAgentsMdTemplate", () => {
 
 	it("uses npx/npm when packageRunner is npx", () => {
 		const output = generateAgentsMdTemplate(makeAnswers({ packageRunner: "npx" }));
-		expect(output).toContain("npx agent-evals run");
+		expect(output).toContain("npx agent-eval-kit run");
 		expect(output).toContain("npm test");
 		expect(output).toContain("npm run typecheck");
 	});

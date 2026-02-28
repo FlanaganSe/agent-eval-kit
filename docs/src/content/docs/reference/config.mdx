@@ -1,11 +1,11 @@
 ---
 title: Config Reference
-description: Complete configuration schema for agent-evals
+description: Complete configuration schema for agent-eval-kit
 ---
 
 ## Config file
 
-agent-evals uses [c12](https://github.com/unjs/c12) for config loading. Create one of:
+agent-eval-kit uses [c12](https://github.com/unjs/c12) for config loading. Create one of:
 
 - `eval.config.ts` (recommended)
 - `eval.config.js`
@@ -14,7 +14,7 @@ agent-evals uses [c12](https://github.com/unjs/c12) for config loading. Create o
 - `eval.config.json`
 
 ```typescript
-import { defineConfig } from "agent-evals";
+import { defineConfig } from "agent-eval-kit";
 
 export default defineConfig({
   // ... configuration

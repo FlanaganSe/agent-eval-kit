@@ -4,13 +4,13 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import type { HookManager } from "../templates/types.js";
 import { detectPackageRunner } from "./init-detect.js";
 
-const HOOK_COMMENT = "# agent-evals: pre-push eval check";
+const HOOK_COMMENT = "# agent-eval-kit: pre-push eval check";
 
 async function buildHookCommand(cwd: string): Promise<string> {
 	const runner = await detectPackageRunner(cwd);
 	return runner === "npx"
-		? "npx agent-evals run --mode=replay --quiet"
-		: `${runner} agent-evals run --mode=replay --quiet`;
+		? "npx agent-eval-kit run --mode=replay --quiet"
+		: `${runner} agent-eval-kit run --mode=replay --quiet`;
 }
 
 export interface InstallResult {
@@ -47,7 +47,7 @@ async function installHuskyHook(cwd: string): Promise<InstallResult> {
 	const content = await safeReadFile(hookPath);
 	const cmd = await buildHookCommand(cwd);
 
-	if (content?.includes("agent-evals run")) {
+	if (content?.includes("agent-eval-kit run")) {
 		return {
 			success: true,
 			message: "Pre-push hook already contains eval command",
@@ -70,7 +70,7 @@ async function installLefthookHook(cwd: string): Promise<InstallResult> {
 	const content = await safeReadFile(configPath);
 	const cmd = await buildHookCommand(cwd);
 
-	if (content?.includes("agent-evals run")) {
+	if (content?.includes("agent-eval-kit run")) {
 		return {
 			success: true,
 			message: "lefthook.yml already contains eval command",
@@ -102,7 +102,7 @@ async function installSimpleGitHook(cwd: string): Promise<InstallResult> {
 
 	const pkg = JSON.parse(raw);
 
-	if (pkg["simple-git-hooks"]?.["pre-push"]?.includes("agent-evals run")) {
+	if (pkg["simple-git-hooks"]?.["pre-push"]?.includes("agent-eval-kit run")) {
 		return {
 			success: true,
 			message: "simple-git-hooks already contains eval command",
@@ -128,7 +128,7 @@ async function installRawGitHook(cwd: string): Promise<InstallResult> {
 	const hookPath = join(hooksDir, "pre-push");
 
 	const content = await safeReadFile(hookPath);
-	if (content?.includes("agent-evals run")) {
+	if (content?.includes("agent-eval-kit run")) {
 		return {
 			success: true,
 			message: "Git hook already contains eval command",

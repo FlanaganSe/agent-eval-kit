@@ -64,6 +64,6 @@ describe("checkAgentsMd", () => {
 	it("warns when no AGENTS.md found", async () => {
 		const result = await checkAgentsMd(tempDir);
 		expect(result.status).toBe("warn");
-		expect(result.message).toContain("agent-evals init");
+		expect(result.message).toContain("agent-eval-kit init");
 	});
 });

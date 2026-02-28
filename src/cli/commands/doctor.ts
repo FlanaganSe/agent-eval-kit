@@ -80,7 +80,7 @@ export async function checkFixtureDir(): Promise<CheckResult> {
 		return {
 			status: "warn",
 			message:
-				"No fixture directory (.eval-fixtures/). Run 'agent-evals record' to create fixtures.",
+				"No fixture directory (.eval-fixtures/). Run 'agent-eval-kit record' to create fixtures.",
 		};
 	}
 }
@@ -97,7 +97,7 @@ export async function checkGitHooks(cwd?: string): Promise<CheckResult> {
 	return {
 		status: "warn",
 		message:
-			"No git hook manager detected. Run 'agent-evals install-hooks' to set up pre-push eval checks.",
+			"No git hook manager detected. Run 'agent-eval-kit install-hooks' to set up pre-push eval checks.",
 	};
 }
 
@@ -110,7 +110,7 @@ export async function checkAgentsMd(cwd?: string): Promise<CheckResult> {
 		return {
 			status: "warn",
 			message:
-				"No AGENTS.md found. Run 'agent-evals init' to generate one for AI coding assistants.",
+				"No AGENTS.md found. Run 'agent-eval-kit init' to generate one for AI coding assistants.",
 		};
 	}
 }
@@ -135,7 +135,7 @@ export default defineCommand({
 			await checkAgentsMd(cwd),
 		];
 
-		const lines = ["agent-evals doctor", ""];
+		const lines = ["agent-eval-kit doctor", ""];
 
 		let passes = 0;
 		let warnings = 0;

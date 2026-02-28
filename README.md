@@ -1,4 +1,4 @@
-# agent-evals
+# agent-eval-kit
 
 TypeScript-native evaluation framework for AI agent workflows.
 
@@ -6,15 +6,15 @@ Record agent responses, grade them with deterministic checks or LLM-as-judge rub
 
 > **v0.0.1** — API is not yet stable.
 
-**[Documentation](https://flanaganse.github.io/agent-evals/)** · **[GitHub](https://github.com/FlanaganSe/agent-evals)**
+**[Documentation](https://flanaganse.github.io/agent-eval-kit/)** · **[GitHub](https://github.com/FlanaganSe/agent-eval-kit)**
 
 ---
 
-## Why agent-evals?
+## Why agent-eval-kit?
 
 Testing AI agents is different from testing deterministic code. Outputs vary between runs, quality is subjective, and running live LLM calls in CI is slow and expensive.
 
-agent-evals solves this with a **record-replay** workflow:
+agent-eval-kit solves this with a **record-replay** workflow:
 
 1. **Record** — capture live agent responses as fixtures
 2. **Replay** — grade recorded outputs instantly, zero API cost
@@ -24,9 +24,9 @@ agent-evals solves this with a **record-replay** workflow:
 ## Install
 
 ```bash
-npm install agent-evals
+npm install agent-eval-kit
 # or
-pnpm add agent-evals
+pnpm add agent-eval-kit
 ```
 
 Requires **Node.js 20+**.
@@ -36,15 +36,15 @@ Requires **Node.js 20+**.
 ### 1. Create a config
 
 ```bash
-agent-evals init
+agent-eval-kit init
 ```
 
 Or write one manually:
 
 ```typescript
 // eval.config.ts
-import { defineConfig } from "agent-evals";
-import { contains, latency } from "agent-evals/graders";
+import { defineConfig } from "agent-eval-kit";
+import { contains, latency } from "agent-eval-kit/graders";
 
 export default defineConfig({
   suites: [
@@ -75,19 +75,19 @@ export default defineConfig({
 ### 2. Record fixtures
 
 ```bash
-agent-evals record --suite basic-qa
+agent-eval-kit record --suite basic-qa
 ```
 
 ### 3. Run evals in replay mode
 
 ```bash
-agent-evals run --mode replay
+agent-eval-kit run --mode replay
 ```
 
 ### 4. Compare runs
 
 ```bash
-agent-evals compare --base <run-id> --compare <run-id>
+agent-eval-kit compare --base <run-id> --compare <run-id>
 ```
 
 ## Core Concepts
@@ -156,7 +156,7 @@ agent-evals compare --base <run-id> --compare <run-id>
 Combine any graders with `all()`, `any()`, and `not()`:
 
 ```typescript
-import { all, any, not, contains, toolCalled } from "agent-evals/graders";
+import { all, any, not, contains, toolCalled } from "agent-eval-kit/graders";
 
 const graders = [
   { grader: all(contains("result"), toolCalled("search")), required: true },
@@ -167,15 +167,15 @@ const graders = [
 ## CLI
 
 ```
-agent-evals run              Run eval suites (live, replay, or judge-only)
-agent-evals record           Record live agent responses as fixtures
-agent-evals compare          Diff two runs to find regressions
-agent-evals list             List previous runs
-agent-evals cache            Manage judge cache (stats, clear)
-agent-evals doctor           Validate project setup
-agent-evals init             Interactive setup wizard
-agent-evals install-hooks    Set up git hooks to run evals on commit
-agent-evals mcp              Start MCP server for AI assistant integration
+agent-eval-kit run              Run eval suites (live, replay, or judge-only)
+agent-eval-kit record           Record live agent responses as fixtures
+agent-eval-kit compare          Diff two runs to find regressions
+agent-eval-kit list             List previous runs
+agent-eval-kit cache            Manage judge cache (stats, clear)
+agent-eval-kit doctor           Validate project setup
+agent-eval-kit init             Interactive setup wizard
+agent-eval-kit install-hooks    Set up git hooks to run evals on commit
+agent-eval-kit mcp              Start MCP server for AI assistant integration
 ```
 
 Common flags: `--suite <name>`, `--mode <live|replay|judge-only>`, `--concurrency <n>`, `--trials <n>`
@@ -208,29 +208,29 @@ Add evals to your CI pipeline using gates:
 
 ```yaml
 # .github/workflows/evals.yml
-- run: agent-evals run --mode replay --suite my-suite
+- run: agent-eval-kit run --mode replay --suite my-suite
 ```
 
 The CLI exits with a non-zero code when gates fail.
 
 ## MCP Server
 
-agent-evals includes an MCP server so AI assistants (Claude, etc.) can run evals, inspect results, and compare runs directly.
+agent-eval-kit includes an MCP server so AI assistants (Claude, etc.) can run evals, inspect results, and compare runs directly.
 
 ```bash
-agent-evals mcp
+agent-eval-kit mcp
 ```
 
 **8 tools**: `run-suite`, `list-runs`, `list-suites`, `list-graders`, `describe-config`, `validate-config`, `get-run-details`, `compare-runs`
 
 **3 resources**: config schema, case schema, grader reference
 
-See the [MCP guide](https://flanaganse.github.io/agent-evals/advanced/mcp-server/) for setup instructions.
+See the [MCP guide](https://flanaganse.github.io/agent-eval-kit/advanced/mcp-server/) for setup instructions.
 
 ## Programmatic API
 
 ```typescript
-import { loadConfig, runSuite } from "agent-evals";
+import { loadConfig, runSuite } from "agent-eval-kit";
 
 const { suites } = await loadConfig({ cwd: process.cwd() });
 const run = await runSuite(suites[0], { mode: "replay" });
@@ -238,7 +238,7 @@ const run = await runSuite(suites[0], { mode: "replay" });
 console.log(run.summary.passRate); // 0.95
 ```
 
-Key exports from `agent-evals`:
+Key exports from `agent-eval-kit`:
 
 - `defineConfig()` — type-safe config helper
 - `loadConfig()` — load and validate `eval.config.ts`
@@ -246,13 +246,13 @@ Key exports from `agent-evals`:
 - `compareRuns()` — diff two runs
 - `saveRun()` / `loadRun()` / `listRuns()` — run persistence
 
-Key exports from `agent-evals/graders`:
+Key exports from `agent-eval-kit/graders`:
 
 - All 20 built-in graders listed above
 - `all()`, `any()`, `not()` — composition operators
 - `computeCaseResult()` — aggregate grader scores
 
-Additional subpath exports: `agent-evals/comparison`, `agent-evals/reporters`, `agent-evals/fixtures`, `agent-evals/plugin`, `agent-evals/watcher`
+Additional subpath exports: `agent-eval-kit/comparison`, `agent-eval-kit/reporters`, `agent-eval-kit/fixtures`, `agent-eval-kit/plugin`, `agent-eval-kit/watcher`
 
 ## Reporters
 
@@ -265,10 +265,10 @@ Four built-in output formats:
 
 ## Plugins
 
-Extend agent-evals with custom graders and lifecycle hooks:
+Extend agent-eval-kit with custom graders and lifecycle hooks:
 
 ```typescript
-import type { EvalPlugin } from "agent-evals/plugin";
+import type { EvalPlugin } from "agent-eval-kit/plugin";
 
 const myPlugin: EvalPlugin = {
   name: "my-plugin",

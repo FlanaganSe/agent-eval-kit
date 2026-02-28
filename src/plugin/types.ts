@@ -1,7 +1,7 @@
 import type { GraderFn, Run, RunMode, Trial } from "../config/types.js";
 
 /**
- * Plugin interface for extending agent-evals.
+ * Plugin interface for extending agent-eval-kit.
  * Plugins are plain objects — no classes, no inheritance.
  *
  * Plugins contribute:

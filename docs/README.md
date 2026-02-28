@@ -1,6 +1,6 @@
-# agent-evals docs
+# agent-eval-kit docs
 
-Documentation site for [agent-evals](https://github.com/FlanaganSe/agent-evals), built with [Astro Starlight](https://starlight.astro.build/).
+Documentation site for [agent-eval-kit](https://github.com/FlanaganSe/agent-eval-kit), built with [Astro Starlight](https://starlight.astro.build/).
 
 ## Development
 

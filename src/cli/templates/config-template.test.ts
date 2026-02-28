@@ -21,7 +21,7 @@ function makeAnswers(overrides?: Partial<InitAnswers>): InitAnswers {
 describe("generateConfigTemplate", () => {
 	it("generates valid TypeScript with defineConfig import", () => {
 		const output = generateConfigTemplate(makeAnswers());
-		expect(output).toContain('import { defineConfig } from "agent-evals"');
+		expect(output).toContain('import { defineConfig } from "agent-eval-kit"');
 		expect(output).toContain("export default defineConfig(");
 	});
 

@@ -8,7 +8,7 @@ description: Run your first eval in under 5 minutes
 After [installation](/getting-started/installation/), create `eval.config.ts` in your project root:
 
 ```typescript
-import { defineConfig } from "agent-evals";
+import { defineConfig } from "agent-eval-kit";
 
 export default defineConfig({
   suites: {
@@ -57,7 +57,7 @@ Create `cases/smoke.yaml`:
 
 ```bash
 # Run against your real API
-agent-evals run --suite=smoke
+agent-eval-kit run --suite=smoke
 ```
 
 This calls your target for each case, grades the output, and prints a summary.
@@ -66,7 +66,7 @@ This calls your target for each case, grades the output, and prints a summary.
 
 ```bash
 # Record API responses for instant replay
-agent-evals run --mode=live --record --suite=smoke
+agent-eval-kit run --mode=live --record --suite=smoke
 ```
 
 Fixtures are saved to `.eval-fixtures/smoke/`.
@@ -75,7 +75,7 @@ Fixtures are saved to `.eval-fixtures/smoke/`.
 
 ```bash
 # Instant, zero-cost replay
-agent-evals run --mode=replay --suite=smoke
+agent-eval-kit run --mode=replay --suite=smoke
 ```
 
 No API calls are made — the recorded responses are replayed and graded.
@@ -84,17 +84,17 @@ No API calls are made — the recorded responses are replayed and graded.
 
 ```bash
 # Re-run on file changes
-agent-evals run --watch --mode=replay --suite=smoke
+agent-eval-kit run --watch --mode=replay --suite=smoke
 ```
 
 ## 7. Compare runs
 
 ```bash
 # List recent runs
-agent-evals list
+agent-eval-kit list
 
 # Compare two runs
-agent-evals compare --base=<run-id-1> --compare=<run-id-2>
+agent-eval-kit compare --base=<run-id-1> --compare=<run-id-2>
 ```
 
 ## Next steps

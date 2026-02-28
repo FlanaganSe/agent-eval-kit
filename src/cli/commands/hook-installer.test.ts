@@ -19,7 +19,7 @@ describe("installPrePushHook — husky", () => {
 		const result = await installPrePushHook(tempDir, "husky");
 		expect(result.success).toBe(true);
 		const content = await readFile(join(tempDir, ".husky", "pre-push"), "utf-8");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("appends to existing hook", async () => {
@@ -29,14 +29,14 @@ describe("installPrePushHook — husky", () => {
 		expect(result.success).toBe(true);
 		const content = await readFile(join(tempDir, ".husky", "pre-push"), "utf-8");
 		expect(content).toContain("echo existing");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("is idempotent", async () => {
 		await installPrePushHook(tempDir, "husky");
 		await installPrePushHook(tempDir, "husky");
 		const content = await readFile(join(tempDir, ".husky", "pre-push"), "utf-8");
-		const matches = content.match(/agent-evals run/g);
+		const matches = content.match(/agent-eval-kit run/g);
 		expect(matches).toHaveLength(1);
 	});
 });
@@ -47,21 +47,21 @@ describe("installPrePushHook — lefthook", () => {
 		const result = await installPrePushHook(tempDir, "lefthook");
 		expect(result.success).toBe(true);
 		const content = await readFile(join(tempDir, "lefthook.yml"), "utf-8");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("creates lefthook.yml if missing", async () => {
 		const result = await installPrePushHook(tempDir, "lefthook");
 		expect(result.success).toBe(true);
 		const content = await readFile(join(tempDir, "lefthook.yml"), "utf-8");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("is idempotent", async () => {
 		await installPrePushHook(tempDir, "lefthook");
 		await installPrePushHook(tempDir, "lefthook");
 		const content = await readFile(join(tempDir, "lefthook.yml"), "utf-8");
-		const matches = content.match(/agent-evals run/g);
+		const matches = content.match(/agent-eval-kit run/g);
 		expect(matches).toHaveLength(1);
 	});
 });
@@ -72,7 +72,7 @@ describe("installPrePushHook — simple-git-hooks", () => {
 		const result = await installPrePushHook(tempDir, "simple-git-hooks");
 		expect(result.success).toBe(true);
 		const content = JSON.parse(await readFile(join(tempDir, "package.json"), "utf-8"));
-		expect(content["simple-git-hooks"]["pre-push"]).toContain("agent-evals run");
+		expect(content["simple-git-hooks"]["pre-push"]).toContain("agent-eval-kit run");
 	});
 
 	it("chains with existing hook", async () => {
@@ -85,7 +85,7 @@ describe("installPrePushHook — simple-git-hooks", () => {
 		const content = JSON.parse(await readFile(join(tempDir, "package.json"), "utf-8"));
 		expect(content["simple-git-hooks"]["pre-push"]).toContain("npm test");
 		expect(content["simple-git-hooks"]["pre-push"]).toContain("&&");
-		expect(content["simple-git-hooks"]["pre-push"]).toContain("agent-evals run");
+		expect(content["simple-git-hooks"]["pre-push"]).toContain("agent-eval-kit run");
 	});
 
 	it("is idempotent", async () => {
@@ -93,7 +93,7 @@ describe("installPrePushHook — simple-git-hooks", () => {
 		await installPrePushHook(tempDir, "simple-git-hooks");
 		await installPrePushHook(tempDir, "simple-git-hooks");
 		const content = JSON.parse(await readFile(join(tempDir, "package.json"), "utf-8"));
-		const matches = content["simple-git-hooks"]["pre-push"].match(/agent-evals run/g);
+		const matches = content["simple-git-hooks"]["pre-push"].match(/agent-eval-kit run/g);
 		expect(matches).toHaveLength(1);
 	});
 
@@ -110,7 +110,7 @@ describe("installPrePushHook — raw git hook", () => {
 		expect(result.success).toBe(true);
 		const content = await readFile(join(tempDir, ".git", "hooks", "pre-push"), "utf-8");
 		expect(content).toContain("#!/bin/sh");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("appends to existing hook", async () => {
@@ -121,7 +121,7 @@ describe("installPrePushHook — raw git hook", () => {
 		expect(result.success).toBe(true);
 		const content = await readFile(join(hooksDir, "pre-push"), "utf-8");
 		expect(content).toContain("echo existing");
-		expect(content).toContain("agent-evals run");
+		expect(content).toContain("agent-eval-kit run");
 	});
 
 	it("sets executable permission", async () => {
@@ -137,7 +137,7 @@ describe("installPrePushHook — raw git hook", () => {
 		await installPrePushHook(tempDir, "none");
 		await installPrePushHook(tempDir, "none");
 		const content = await readFile(join(tempDir, ".git", "hooks", "pre-push"), "utf-8");
-		const matches = content.match(/agent-evals run/g);
+		const matches = content.match(/agent-eval-kit run/g);
 		expect(matches).toHaveLength(1);
 	});
 });

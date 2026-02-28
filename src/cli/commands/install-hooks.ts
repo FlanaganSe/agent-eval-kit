@@ -24,7 +24,7 @@ export default defineCommand({
 	async run({ args }) {
 		const cwd = resolve(args.cwd ?? ".");
 
-		intro(pc.bold("agent-evals install-hooks"));
+		intro(pc.bold("agent-eval-kit install-hooks"));
 
 		// Detect or use forced manager
 		let manager: HookManager;
