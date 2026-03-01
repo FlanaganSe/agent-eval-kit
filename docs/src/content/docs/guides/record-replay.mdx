@@ -42,9 +42,7 @@ Keys are sorted deterministically for clean git diffs.
 
 ## Config hash invalidation
 
-Fixtures are keyed by a config hash computed from the suite name, case count, and case IDs. When any of these change, fixtures are automatically invalidated — you'll see warnings or errors (with `--strict-fixtures`) prompting you to re-record.
-
-The `targetVersion` field provides manual invalidation control:
+Fixtures are keyed by a config hash computed from the **suite name** and **`targetVersion`**. This is intentionally narrow — grader changes and case additions/removals do not invalidate fixtures because those changes don't affect the recorded target output. If you change your target's behavior (prompt, model, tools), bump `targetVersion` to invalidate fixtures:
 
 ```typescript
 suites: [

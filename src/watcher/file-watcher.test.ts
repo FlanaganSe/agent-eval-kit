@@ -16,7 +16,7 @@ afterEach(async () => {
 
 describe("createFileWatcher", () => {
 	it("creates a watcher that can be closed", async () => {
-		const watcher = await createFileWatcher({
+		const watcher = createFileWatcher({
 			paths: [tempDir],
 			debounceMs: 50,
 		});
@@ -25,7 +25,7 @@ describe("createFileWatcher", () => {
 	});
 
 	it("emits change events on file write", { timeout: 5000 }, async () => {
-		const watcher = await createFileWatcher({
+		const watcher = createFileWatcher({
 			paths: [tempDir],
 			debounceMs: 50,
 		});
@@ -64,7 +64,7 @@ describe("createFileWatcher", () => {
 	});
 
 	it("debounces multiple rapid changes", { timeout: 5000 }, async () => {
-		const watcher = await createFileWatcher({
+		const watcher = createFileWatcher({
 			paths: [tempDir],
 			debounceMs: 200,
 		});
@@ -99,8 +99,21 @@ describe("createFileWatcher", () => {
 		await watcher.close();
 	});
 
+	it("calls onError for non-existent paths instead of crashing", async () => {
+		const errors: Array<{ error: unknown; path: string }> = [];
+		const watcher = createFileWatcher({
+			paths: ["/nonexistent/path/that/does/not/exist"],
+			debounceMs: 50,
+			onError: (error, path) => errors.push({ error, path }),
+		});
+
+		expect(errors.length).toBe(1);
+		expect(errors[0]?.path).toBe("/nonexistent/path/that/does/not/exist");
+		await watcher.close();
+	});
+
 	it("ignores node_modules by default", async () => {
-		const watcher = await createFileWatcher({
+		const watcher = createFileWatcher({
 			paths: [tempDir],
 			debounceMs: 50,
 		});

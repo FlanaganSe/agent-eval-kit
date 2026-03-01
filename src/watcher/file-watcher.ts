@@ -4,6 +4,7 @@ export interface FileWatcherOptions {
 	readonly paths: readonly string[];
 	readonly ignore?: readonly string[] | undefined;
 	readonly debounceMs?: number | undefined;
+	readonly onError?: (error: unknown, path: string) => void;
 }
 
 export interface FileWatcher {
@@ -35,6 +36,14 @@ export function createFileWatcher(options: FileWatcherOptions): FileWatcher {
 		}
 	};
 
+	const handleError = (error: unknown, dir: string): void => {
+		if (options.onError) {
+			options.onError(error, dir);
+		} else {
+			process.stderr.write(`[eval-watch] fs.watch error on ${dir}: ${String(error)}\n`);
+		}
+	};
+
 	for (const dir of options.paths) {
 		try {
 			const watcher = fsWatch(dir, { recursive: true }, (_event, filename) => {
@@ -47,9 +56,10 @@ export function createFileWatcher(options: FileWatcherOptions): FileWatcher {
 				if (debounceTimer) clearTimeout(debounceTimer);
 				debounceTimer = setTimeout(flush, debounceMs);
 			});
+			watcher.on("error", (err) => handleError(err, dir));
 			watchers.push(watcher);
-		} catch {
-			// Directory may not exist — skip silently
+		} catch (err) {
+			handleError(err, dir);
 		}
 	}
 
