@@ -14,7 +14,7 @@ import { handleValidateConfig } from "./tools/validate-config.js";
  * All logging goes to stderr — stdout is reserved for the JSON-RPC protocol.
  */
 export async function startMcpServer(): Promise<void> {
-	// Dynamic import — the SDK is an optional peer dependency
+	// Dynamic import — keeps the SDK out of the main import path
 	const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
 	const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
 
@@ -27,7 +27,6 @@ export async function startMcpServer(): Promise<void> {
 
 	registerTools(server, cwd);
 
-	// Import resources registration lazily to avoid import errors when MCP SDK not installed
 	const { registerResources } = await import("./resources.js");
 	registerResources(server);
 
@@ -37,7 +36,7 @@ export async function startMcpServer(): Promise<void> {
 }
 
 // Use `any` for McpServer type since it's dynamically imported
-// biome-ignore lint/suspicious/noExplicitAny: McpServer type comes from optional peer dep
+// biome-ignore lint/suspicious/noExplicitAny: McpServer type is dynamically imported
 type McpServerInstance = any;
 
 function registerTools(server: McpServerInstance, cwd: string): void {

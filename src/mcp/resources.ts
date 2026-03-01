@@ -70,7 +70,7 @@ export function generateGraderReference(): string {
 
 // ─── Resource registration ───────────────────────────────────────────────────
 
-// biome-ignore lint/suspicious/noExplicitAny: McpServer type comes from optional peer dep
+// biome-ignore lint/suspicious/noExplicitAny: McpServer type is dynamically imported
 export function registerResources(server: any): void {
 	const configSchema = generateConfigSchema();
 	const caseSchema = generateCaseSchema();
