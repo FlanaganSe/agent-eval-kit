@@ -52,5 +52,4 @@ agent-eval-kit run -w --mode=replay -s smoke -t 3
 
 ## Platform notes
 
-- **macOS/Windows**: Uses native `fs.watch` (no extra dependencies)
-- **Linux**: Uses `chokidar` (included as a dependency)
+Uses native `fs.watch({ recursive: true })` on all platforms. Requires Node.js >= 20.16.0.

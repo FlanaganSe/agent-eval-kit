@@ -1,4 +1,4 @@
-export const VERSION = "0.0.3";
+export const VERSION = "0.0.4";
 
 // Comparison
 export { type CompareOptions, compareRuns } from "./comparison/compare.js";
