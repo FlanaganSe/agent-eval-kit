@@ -59,11 +59,12 @@ A case is marked `flaky: true` when it has at least one pass and at least one fa
 ```typescript
 import { computeAllTrialStats, wilsonInterval } from "agent-eval-kit";
 
-// Compute stats for all cases
-const stats = computeAllTrialStats(trials);
+// Compute stats for all cases (trialCount is the configured number of trials)
+const stats = computeAllTrialStats(trials, trialCount);
 
 // Compute a single Wilson interval
-const [low, high] = wilsonInterval(successes, total, 1.96);
+const interval = wilsonInterval(successes, total, 1.96);
+// interval.low, interval.high
 ```
 
 ## Run summary statistics

@@ -84,7 +84,7 @@ import {
   formatJsonReport,
   formatJunitXml,
   formatMarkdownReport,
-} from "agent-eval-kit/reporters";
+} from "agent-eval-kit";
 
 // Console (human-readable)
 const text = formatConsoleReport(run, { color: true, verbose: false });
@@ -122,7 +122,7 @@ const diskCached = createDiskCachingJudge(myJudgeFn, {
 // Cache management
 await clearJudgeCache();
 const stats = await judgeCacheStats();
-// stats: { entries, totalSize, ... }
+// stats: { entries: number, totalBytes: number }
 ```
 
 ## Cost estimation
@@ -141,11 +141,12 @@ Does not estimate dollar cost — returns call counts so you can calculate based
 ```typescript
 import { computeAllTrialStats, wilsonInterval } from "agent-eval-kit";
 
-// Compute per-case trial statistics (returns undefined if trials <= 1)
-const stats = computeAllTrialStats(trials);
+// Compute per-case trial statistics (returns undefined if trialCount <= 1)
+const stats = computeAllTrialStats(trials, trialCount);
 
 // Compute a Wilson score interval
-const [low, high] = wilsonInterval(successes, total, 1.96);
+const interval = wilsonInterval(successes, total, 1.96);
+// interval.low, interval.high
 ```
 
 ## File watcher
