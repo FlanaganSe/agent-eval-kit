@@ -237,21 +237,7 @@ export default defineConfig({
 			name: "tool-use",
 			description: "Agent calls the right tools with the right arguments",
 			target,
-			cases: [
-				{
-					id: "weather-paris",
-					input: {
-						prompt: "What is the current weather in Paris? Use the get_weather tool.",
-						system:
-							"You are a helpful assistant with access to tools. Always use the appropriate tool to answer questions. Respond with a brief summary after getting tool results.",
-					},
-					expected: {
-						toolCalls: [{ name: "get_weather", args: { city: "Paris" } }],
-					},
-					category: "happy_path",
-				},
-				"tool-use-cases.jsonl",
-			],
+			cases: "tool-use-cases.jsonl",
 			defaultGraders: [
 				{ grader: toolCalled("get_weather"), required: true },
 				{ grader: noToolErrors, required: true },

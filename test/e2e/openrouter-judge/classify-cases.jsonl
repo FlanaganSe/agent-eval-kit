@@ -1,1 +1,2 @@
+{"id":"sentiment-positive","input":{"prompt":"Write a one-sentence product review for a pair of shoes you love."},"expected":{"metadata":{"classification":"positive"}}}
 {"id":"sentiment-negative","input":{"prompt":"Write a one-sentence product review for headphones that broke after one day."},"expected":{"metadata":{"classification":"negative"}}}

@@ -115,14 +115,7 @@ export default defineConfig({
 			name: "pipeline",
 			description: "Multiple cases to exercise runner concurrency and gates",
 			target,
-			cases: [
-				{
-					id: "capital-japan",
-					input: { prompt: "What is the capital of Japan? Reply with only the city name." },
-					category: "happy_path",
-				},
-				"pipeline-cases.jsonl",
-			],
+			cases: "pipeline-cases.jsonl",
 			defaultGraders: [{ grader: latency(15_000) }],
 			gates: {
 				passRate: 1.0,

@@ -1,1 +1,2 @@
+{"id":"boiling-point","input":{"prompt":"At what temperature does water boil at sea level? Be precise."},"expected":{"text":"Water boils at 100 degrees Celsius (212 degrees Fahrenheit) at sea level."}}
 {"id":"speed-of-light","input":{"prompt":"What is the speed of light in a vacuum? Be precise."},"expected":{"text":"The speed of light in a vacuum is approximately 299,792,458 meters per second."}}

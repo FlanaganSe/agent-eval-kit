@@ -117,13 +117,7 @@ export default defineConfig({
 			name: "rubric",
 			description: "LLM judge scores output against natural language criteria",
 			target,
-			cases: [
-				{
-					id: "helpful-explanation",
-					input: { prompt: "Explain why the sky is blue in one sentence." },
-				},
-				"rubric-cases.jsonl",
-			],
+			cases: "rubric-cases.jsonl",
 			defaultGraders: [
 				{
 					grader: llmRubric(
@@ -145,16 +139,7 @@ export default defineConfig({
 			name: "factuality",
 			description: "LLM judge checks factual consistency against expected reference",
 			target,
-			cases: [
-				{
-					id: "boiling-point",
-					input: { prompt: "At what temperature does water boil at sea level? Be precise." },
-					expected: {
-						text: "Water boils at 100 degrees Celsius (212 degrees Fahrenheit) at sea level.",
-					},
-				},
-				"factuality-cases.jsonl",
-			],
+			cases: "factuality-cases.jsonl",
 			defaultGraders: [{ grader: factuality(), required: true }, { grader: latency(15_000) }],
 			gates: {
 				passRate: 1.0,
@@ -191,14 +176,7 @@ export default defineConfig({
 			name: "classify",
 			description: "LLM judge classifies output into predefined categories",
 			target,
-			cases: [
-				{
-					id: "sentiment-positive",
-					input: { prompt: "Write a one-sentence product review for a pair of shoes you love." },
-					expected: { metadata: { classification: "positive" } },
-				},
-				"classify-cases.jsonl",
-			],
+			cases: "classify-cases.jsonl",
 			defaultGraders: [
 				{
 					grader: llmClassify({
