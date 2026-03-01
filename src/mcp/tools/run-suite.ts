@@ -1,4 +1,6 @@
 import { loadConfig } from "../../config/loader.js";
+import type { FixtureOptions } from "../../config/types.js";
+import { computeFixtureConfigHash } from "../../fixtures/config-hash.js";
 import { formatConsoleReport } from "../../reporters/console.js";
 import { runSuite } from "../../runner/runner.js";
 import { saveRun } from "../../storage/run-store.js";
@@ -27,6 +29,14 @@ export async function handleRunSuite(args: RunSuiteArgs, cwd: string): Promise<T
 			};
 		}
 
+		const configHash = computeFixtureConfigHash(resolvedSuite);
+		const fixtureOptions: FixtureOptions = {
+			baseDir: config.fixtureDir,
+			stripRaw: resolvedSuite.replay?.stripRaw ?? true,
+			ttlDays: resolvedSuite.replay?.ttlDays ?? 14,
+			strictFixtures: false,
+		};
+
 		const run = await runSuite(resolvedSuite, {
 			mode: args.mode,
 			record: args.record,
@@ -34,7 +44,8 @@ export async function handleRunSuite(args: RunSuiteArgs, cwd: string): Promise<T
 			timeoutMs: config.run.timeoutMs,
 			judge: config.judge?.call,
 			plugins: [...config.plugins],
-			fixtureDir: config.fixtureDir,
+			configHash,
+			fixtureOptions,
 			runDir: undefined,
 		});
 

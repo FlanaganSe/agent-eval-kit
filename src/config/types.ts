@@ -217,7 +217,6 @@ export interface RunOptions {
 	readonly previousRunId?: string | undefined;
 	readonly previousRun?: Run | undefined;
 	readonly strictFixtures?: boolean | undefined;
-	readonly fixtureDir?: string | undefined;
 	readonly runDir?: string | undefined;
 	readonly trials?: number | undefined;
 	readonly rateLimiter?: RateLimiter | undefined;
