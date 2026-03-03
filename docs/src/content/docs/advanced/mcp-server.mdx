@@ -15,20 +15,43 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Tabs>
   <TabItem label="Claude Code">
-    Add to `.claude/settings.json` (project-level) or `~/.claude/settings.json` (global):
+    Run this from your project root:
+
+    ```bash
+    claude mcp add --scope project agent-eval-kit -- npx -y agent-eval-kit mcp
+    ```
+
+    This writes a `.mcp.json` file at the project root that you can commit to share with your team. To add it for only yourself instead, use `--scope local` (default) or `--scope user` (all projects).
+
+    You can also create `.mcp.json` manually:
+
+    ```json
+    {
+      "mcpServers": {
+        "agent-eval-kit": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "agent-eval-kit", "mcp"]
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Claude Desktop">
+    Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
     ```json
     {
       "mcpServers": {
         "agent-eval-kit": {
           "command": "npx",
-          "args": ["agent-eval-kit", "mcp"]
+          "args": ["-y", "agent-eval-kit", "mcp"]
         }
       }
     }
     ```
 
-    Claude Code spawns the server from the project root automatically.
+    Restart Claude Desktop after editing the config.
   </TabItem>
   <TabItem label="Cursor">
     Add to `.cursor/mcp.json` in the project root:
@@ -38,24 +61,22 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
       "mcpServers": {
         "agent-eval-kit": {
           "command": "npx",
-          "args": ["agent-eval-kit", "mcp"]
+          "args": ["-y", "agent-eval-kit", "mcp"]
         }
       }
     }
     ```
   </TabItem>
   <TabItem label="VS Code">
-    Add to `.vscode/settings.json`:
+    Add to `.vscode/mcp.json` in the project root:
 
     ```json
     {
-      "mcp": {
-        "servers": {
-          "agent-eval-kit": {
-            "type": "stdio",
-            "command": "npx",
-            "args": ["agent-eval-kit", "mcp"]
-          }
+      "servers": {
+        "agent-eval-kit": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "agent-eval-kit", "mcp"]
         }
       }
     }
@@ -69,7 +90,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
       "mcpServers": {
         "agent-eval-kit": {
           "command": "npx",
-          "args": ["agent-eval-kit", "mcp"]
+          "args": ["-y", "agent-eval-kit", "mcp"]
         }
       }
     }
@@ -78,7 +99,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 </Tabs>
 
 :::tip
-If agent-eval-kit is installed locally (`pnpm add -D agent-eval-kit`), `npx` resolves to the local binary with no network lookup.
+No local install required — `npx -y` downloads agent-eval-kit on first run. If it's already installed locally (`pnpm add -D agent-eval-kit`), `npx` resolves to the local binary with no network lookup.
 :::
 
 ## Usage
