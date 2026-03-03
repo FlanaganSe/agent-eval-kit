@@ -1,5 +1,5 @@
 import { appendFile, stat } from "node:fs/promises";
-import { basename, dirname, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { defineCommand } from "citty";
 import { loadConfig, type ValidatedConfig } from "../../config/loader.js";
@@ -182,6 +182,7 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 
 		// Load config
 		const validatedConfig = await loadConfigSafe(args.config);
+		const runDir = join(validatedConfig.projectDir, ".eval-runs");
 
 		// Filter suites
 		const suites = filterSuites(validatedConfig.suites, args.suite);
@@ -207,7 +208,7 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 			if (!args["run-id"]) {
 				throw new ConfigError("--mode=judge-only requires --run-id=<id>");
 			}
-			previousRun = await loadRun(args["run-id"]);
+			previousRun = await loadRun(args["run-id"], runDir);
 		}
 
 		// Cost confirmation
@@ -227,7 +228,7 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 					const shouldContinue = await confirmPrompt("Proceed with this run?");
 					if (!shouldContinue) {
 						logger.info("Run cancelled.");
-						process.exit(0);
+						return;
 					}
 				} else {
 					throw new ConfigError(
@@ -293,7 +294,7 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 			await writeGitHubSummary(run);
 
 			// Save run artifact
-			const savedPath = await saveRun(run);
+			const savedPath = await saveRun(run, runDir);
 			logger.info(`Run saved: ${savedPath}`);
 
 			// Determine exit code for this suite
@@ -304,16 +305,16 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 			}
 		}
 	} catch (err) {
-		const exitCode = getExitCode(err);
 		logger.error(err instanceof Error ? err.message : String(err));
-		process.exit(exitCode);
+		process.exitCode = getExitCode(err);
+		return;
 	} finally {
 		process.off("SIGINT", handleRawSignal);
 		process.off("SIGTERM", handleTermSignal);
 		rateLimiter?.dispose();
 	}
 
-	process.exit(worstExitCode);
+	process.exitCode = worstExitCode;
 }
 
 async function loadConfigSafe(configArg: string | undefined): Promise<ValidatedConfig> {
@@ -523,6 +524,11 @@ export default defineCommand({
 	},
 	args: {
 		...globalArgs,
+		suiteName: {
+			type: "positional" as const,
+			description: "Suite name to run",
+			required: false,
+		},
 		mode: {
 			type: "string" as const,
 			description: "Execution mode: live, replay, or judge-only",
@@ -606,10 +612,16 @@ export default defineCommand({
 		},
 	},
 	async run({ args }) {
+		if (args.suiteName && args.suite) {
+			throw new ConfigError(
+				`Ambiguous suite: positional "${args.suiteName}" and --suite="${args.suite}". Use one or the other.`,
+			);
+		}
+		const merged = { ...args, suite: (args.suiteName as string | undefined) ?? args.suite };
 		if (args.watch) {
-			await executeWatch(args);
+			await executeWatch(merged);
 		} else {
-			await executeRun(args);
+			await executeRun(merged);
 		}
 	},
 });

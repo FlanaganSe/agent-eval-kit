@@ -1,4 +1,5 @@
 import { defineCommand } from "citty";
+import { ConfigError } from "../errors.js";
 import { globalArgs } from "../shared-args.js";
 import { executeRun } from "./run.js";
 
@@ -10,6 +11,11 @@ export default defineCommand({
 	},
 	args: {
 		...globalArgs,
+		suiteName: {
+			type: "positional" as const,
+			description: "Suite name to record",
+			required: false,
+		},
 		suite: {
 			type: "string" as const,
 			alias: "s",
@@ -25,8 +31,14 @@ export default defineCommand({
 		},
 	},
 	async run({ args }) {
+		if (args.suiteName && args.suite) {
+			throw new ConfigError(
+				`Ambiguous suite: positional "${args.suiteName}" and --suite="${args.suite}". Use one or the other.`,
+			);
+		}
 		await executeRun({
 			...args,
+			suite: (args.suiteName as string | undefined) ?? args.suite,
 			mode: "live",
 			record: true,
 		});

@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { defineCommand } from "citty";
 import { compareRuns } from "../../comparison/compare.js";
 import { formatComparisonReport } from "../../comparison/format.js";
@@ -30,13 +31,15 @@ export async function executeCompare(args: ExecuteCompareArgs): Promise<void> {
 			throw new ConfigError("Missing required argument: --compare <runId>");
 		}
 
-		const baseRun = await loadRun(args.base).catch((err: unknown) => {
+		const runDir = join(process.cwd(), ".eval-runs");
+
+		const baseRun = await loadRun(args.base, runDir).catch((err: unknown) => {
 			throw new ConfigError(
 				`Failed to load base run: ${err instanceof Error ? err.message : String(err)}`,
 			);
 		});
 
-		const compareRun = await loadRun(args.compare).catch((err: unknown) => {
+		const compareRun = await loadRun(args.compare, runDir).catch((err: unknown) => {
 			throw new ConfigError(
 				`Failed to load compare run: ${err instanceof Error ? err.message : String(err)}`,
 			);
@@ -71,14 +74,13 @@ export async function executeCompare(args: ExecuteCompareArgs): Promise<void> {
 			process.stdout.write(`${report}\n`);
 		}
 
-		// Exit codes
 		if (args["fail-on-regression"] && comparison.summary.regressions > 0) {
-			process.exit(1);
+			process.exitCode = 1;
+			return;
 		}
 	} catch (err) {
-		const exitCode = getExitCode(err);
 		logger.error(err instanceof Error ? err.message : String(err));
-		process.exit(exitCode);
+		process.exitCode = getExitCode(err);
 	}
 }
 

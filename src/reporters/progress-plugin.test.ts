@@ -67,7 +67,7 @@ describe("createProgressPlugin", () => {
 		expect(stream.chunks.some((c) => c.includes("1/3"))).toBe(true);
 	});
 
-	it("clears progress line on afterRun", async () => {
+	it("does not erase progress on afterRun", async () => {
 		const stream = createMockStream(true);
 		const plugin = createProgressPlugin({ stream });
 
@@ -84,7 +84,8 @@ describe("createProgressPlugin", () => {
 			totalCount: 1,
 		});
 
-		// afterRun should clear by writing ANSI escape
+		const chunksBeforeAfterRun = stream.chunks.length;
+
 		const run = {
 			schemaVersion: "1.0.0",
 			id: "x",
@@ -108,8 +109,7 @@ describe("createProgressPlugin", () => {
 		};
 		await plugin.hooks?.afterRun?.(run);
 
-		// Should have escape sequences for clearing
-		expect(stream.chunks.some((c) => c.includes("\x1b["))).toBe(true);
+		expect(stream.chunks.length).toBe(chunksBeforeAfterRun);
 	});
 
 	it("shows replay label in beforeRun", async () => {

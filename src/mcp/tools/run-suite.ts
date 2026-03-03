@@ -3,6 +3,7 @@ import { loadConfig } from "../../config/loader.js";
 import type { FixtureOptions } from "../../config/types.js";
 import { computeFixtureConfigHash } from "../../fixtures/config-hash.js";
 import { formatConsoleReport } from "../../reporters/console.js";
+import { createTokenBucketLimiter } from "../../runner/rate-limiter.js";
 import { runSuite } from "../../runner/runner.js";
 import { saveRun } from "../../storage/run-store.js";
 import { formatError, type ToolResult, textResult } from "./types.js";
@@ -38,23 +39,31 @@ export async function handleRunSuite(args: RunSuiteArgs, cwd: string): Promise<T
 			strictFixtures: false,
 		};
 
-		const run = await runSuite(resolvedSuite, {
-			mode: args.mode,
-			record: args.record,
-			concurrency: 1,
-			timeoutMs: config.run.timeoutMs,
-			judge: config.judge?.call,
-			plugins: [...config.plugins],
-			configHash,
-			fixtureOptions,
-			runDir: undefined,
-		});
+		const rateLimiter =
+			config.run.rateLimit && args.mode === "live"
+				? createTokenBucketLimiter({ maxRequestsPerMinute: config.run.rateLimit })
+				: undefined;
 
-		// Persist run so list-runs and get-run-details can find it
-		await saveRun(run, join(cwd, ".eval-runs"));
+		try {
+			const run = await runSuite(resolvedSuite, {
+				mode: args.mode,
+				record: args.record,
+				concurrency: 1,
+				timeoutMs: config.run.timeoutMs,
+				judge: config.judge?.call,
+				plugins: [...config.plugins],
+				configHash,
+				fixtureOptions,
+				rateLimiter,
+			});
 
-		const report = formatConsoleReport(run, { color: false });
-		return textResult(report);
+			await saveRun(run, join(cwd, ".eval-runs"));
+
+			const report = formatConsoleReport(run, { color: false });
+			return textResult(report);
+		} finally {
+			rateLimiter?.dispose();
+		}
 	} catch (error) {
 		return formatError(`run suite "${args.suite}"`, error);
 	}

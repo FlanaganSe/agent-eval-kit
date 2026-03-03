@@ -30,6 +30,7 @@ export interface ValidatedConfig {
 	readonly plugins: readonly EvalPlugin[];
 	readonly reporters: readonly ReporterConfig[];
 	readonly fixtureDir: string;
+	readonly projectDir: string;
 }
 
 /**
@@ -69,6 +70,7 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 		plugins,
 		reporters: config.reporters ?? [],
 		fixtureDir,
+		projectDir: basePath,
 	};
 }
 

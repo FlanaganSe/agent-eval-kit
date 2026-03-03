@@ -40,10 +40,6 @@ export function createProgressPlugin(options?: ProgressPluginOptions): EvalPlugi
 				lastLineCount = 1;
 			},
 			async afterRun() {
-				// Clear progress line before final report
-				if (lastLineCount > 0) {
-					stream.write(`\x1b[${lastLineCount}A\x1b[0J`);
-				}
 				lastLineCount = 0;
 			},
 		},

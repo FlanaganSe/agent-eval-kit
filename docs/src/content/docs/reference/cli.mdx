@@ -33,8 +33,10 @@ All logging goes to stderr. Stdout is reserved for reporter output (JSON, JUnit)
 Execute eval suites against the target function.
 
 ```bash
-agent-eval-kit run [options]
+agent-eval-kit run [suite] [options]
 ```
+
+Suite name can be passed as a positional argument or via `--suite`/`-s`. If neither is provided, all suites run.
 
 | Flag | Alias | Type | Default | Description |
 |------|-------|------|---------|-------------|
@@ -67,8 +69,10 @@ Run results are saved to `.eval-runs/<uuid>.json`. In GitHub Actions, results ar
 Shorthand for `run --mode=live --record`.
 
 ```bash
-agent-eval-kit record [options]
+agent-eval-kit record [suite] [options]
 ```
+
+Suite name can be passed as a positional argument or via `--suite`/`-s`.
 
 Accepts: `--suite`, `--concurrency`, `--rate-limit`, and global flags.
 
@@ -95,8 +99,10 @@ The comparison shows per-case regressions, improvements, score deltas, per-grade
 List recent eval runs.
 
 ```bash
-agent-eval-kit list [options]
+agent-eval-kit list [suite] [options]
 ```
+
+Suite name can be passed as a positional argument or via `--suite`.
 
 | Flag | Alias | Type | Default | Description |
 |------|-------|------|---------|-------------|

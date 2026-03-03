@@ -1,6 +1,8 @@
+import { join } from "node:path";
 import { defineCommand } from "citty";
 import pc from "picocolors";
 import { listRuns } from "../../storage/run-store.js";
+import { ConfigError } from "../errors.js";
 import { createLogger } from "../logger.js";
 import { globalArgs } from "../shared-args.js";
 import { parseIntArg } from "./run.js";
@@ -10,6 +12,11 @@ export default defineCommand({
 	meta: { name: "list", description: "List previous eval runs" },
 	args: {
 		...globalArgs,
+		suiteName: {
+			type: "positional" as const,
+			description: "Filter by suite name",
+			required: false,
+		},
 		limit: {
 			type: "string" as const,
 			alias: "n",
@@ -21,11 +28,17 @@ export default defineCommand({
 		},
 	},
 	async run({ args }) {
+		if (args.suiteName && args.suite) {
+			throw new ConfigError(
+				`Ambiguous suite: positional "${args.suiteName}" and --suite="${args.suite}". Use one or the other.`,
+			);
+		}
+		const suiteFilter = (args.suiteName as string | undefined) ?? args.suite;
 		const logger = createLogger(args);
 		const limit = parseIntArg(args.limit, "limit") ?? 10;
-		const allRuns = await listRuns();
+		const allRuns = await listRuns(join(process.cwd(), ".eval-runs"));
 
-		const filtered = args.suite ? allRuns.filter((r) => r.suiteId === args.suite) : allRuns;
+		const filtered = suiteFilter ? allRuns.filter((r) => r.suiteId === suiteFilter) : allRuns;
 
 		const display = filtered.slice(0, limit);
 
