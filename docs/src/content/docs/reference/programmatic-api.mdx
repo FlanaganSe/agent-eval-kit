@@ -178,6 +178,29 @@ const progress = createProgressPlugin();
 // Writes N/M (X%) to stderr on TTY
 ```
 
+## Graders
+
+All 20 built-in graders, composition operators, and their option types are available from the root package:
+
+```typescript
+import {
+  // Text
+  contains, notContains, exactMatch, regex, jsonSchema,
+  // Tool calls
+  toolCalled, toolNotCalled, toolSequence, toolArgsMatch,
+  // Metrics
+  latency, cost, tokenCount,
+  // Safety
+  safetyKeywords, noHallucinatedNumbers,
+  // LLM
+  llmRubric, factuality, llmClassify,
+  // Composition
+  all, any, not,
+} from "agent-eval-kit";
+```
+
+The `agent-eval-kit/graders` subpath re-exports the same graders plus scoring internals (`computeCaseResult`). See the [Graders API](/agent-eval-kit/reference/graders-api/) for full documentation.
+
 ## Key types
 
 All types are exported from the main package or subpath exports:
@@ -206,7 +229,7 @@ import type {
   GraderFactory,
   GradeResult,
   CaseResult,
-} from "agent-eval-kit/graders";
+} from "agent-eval-kit"; // also available from "agent-eval-kit/graders"
 
 // Judge types
 import type {

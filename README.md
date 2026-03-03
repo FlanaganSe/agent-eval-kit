@@ -48,7 +48,7 @@ Or write one manually:
 ```typescript
 // eval.config.ts
 import { defineConfig } from "agent-eval-kit";
-import { contains, latency } from "agent-eval-kit/graders";
+import { contains, latency } from "agent-eval-kit";
 
 export default defineConfig({
   suites: [
@@ -160,7 +160,7 @@ agent-eval-kit compare --base <run-id> --compare <run-id>
 Combine any graders with `all()`, `any()`, and `not()`:
 
 ```typescript
-import { all, any, not, contains, toolCalled } from "agent-eval-kit/graders";
+import { all, any, not, contains, toolCalled } from "agent-eval-kit";
 
 const graders = [
   { grader: all(contains("result"), toolCalled("search")), required: true },

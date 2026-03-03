@@ -95,16 +95,42 @@ export {
 	readFixture,
 	writeFixture,
 } from "./fixtures/fixture-store.js";
+// Composition
+export { all, any, not } from "./graders/compose.js";
+// Deterministic Graders
+export { type ContainsOptions, contains, notContains } from "./graders/deterministic/contains.js";
+export { cost } from "./graders/deterministic/cost.js";
+export { type ExactMatchOptions, exactMatch } from "./graders/deterministic/exact-match.js";
+export { jsonSchema } from "./graders/deterministic/json-schema.js";
+export { latency } from "./graders/deterministic/latency.js";
+export {
+	type NoHallucinatedNumbersOptions,
+	noHallucinatedNumbers,
+} from "./graders/deterministic/no-hallucinated-numbers.js";
+export { type RegexOptions, regex } from "./graders/deterministic/regex.js";
+export { safetyKeywords } from "./graders/deterministic/safety-keywords.js";
+export { tokenCount } from "./graders/deterministic/token-count.js";
+export { type ToolArgsMatchMode, toolArgsMatch } from "./graders/deterministic/tool-args-match.js";
+export { toolCalled, toolNotCalled } from "./graders/deterministic/tool-called.js";
+export { type ToolSequenceMode, toolSequence } from "./graders/deterministic/tool-sequence.js";
 // LLM Graders
-export { factuality } from "./graders/llm/factuality.js";
-export { createCachingJudge } from "./graders/llm/judge-cache.js";
+export { type FactualityOptions, factuality } from "./graders/llm/factuality.js";
+export { createCachingJudge, type JudgeCacheOptions } from "./graders/llm/judge-cache.js";
 export {
 	clearJudgeCache,
 	createDiskCachingJudge,
+	type DiskCacheOptions,
 	judgeCacheStats,
 } from "./graders/llm/judge-disk-cache.js";
 export { type LlmClassifyOptions, llmClassify } from "./graders/llm/llm-classify.js";
-export { llmRubric } from "./graders/llm/llm-rubric.js";
+export {
+	type LlmRubricExample,
+	type LlmRubricOptions,
+	llmRubric,
+} from "./graders/llm/llm-rubric.js";
+// Scoring
+export { computeCaseResult } from "./graders/scoring.js";
+export type { GradeResult } from "./graders/types.js";
 // Plugin
 export type {
 	AfterTrialContext,
@@ -113,12 +139,16 @@ export type {
 	PluginHooks,
 } from "./plugin/types.js";
 // Reporters
-export { formatConsoleReport, formatMarkdownSummary } from "./reporters/console.js";
+export {
+	type ConsoleReportOptions,
+	formatConsoleReport,
+	formatMarkdownSummary,
+} from "./reporters/console.js";
 export { formatJsonReport } from "./reporters/json.js";
 export { formatJunitXml } from "./reporters/junit.js";
 export { formatMarkdownReport } from "./reporters/markdown.js";
 // Progress
-export { createProgressPlugin } from "./reporters/progress-plugin.js";
+export { createProgressPlugin, type ProgressPluginOptions } from "./reporters/progress-plugin.js";
 export { resolveReporter } from "./reporters/registry.js";
 export type { ReporterOptions, ReporterPlugin } from "./reporters/types.js";
 // Runner

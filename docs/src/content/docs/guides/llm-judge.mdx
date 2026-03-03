@@ -83,7 +83,7 @@ Scores output against natural language criteria on a 1–4 scale:
 Default pass threshold is 0.75 (score 3+).
 
 ```typescript
-import { llmRubric } from "agent-eval-kit/graders";
+import { llmRubric } from "agent-eval-kit";
 
 // Simple string shorthand
 llmRubric("Response is helpful, accurate, and well-formatted")
@@ -106,7 +106,7 @@ Few-shot `examples` calibrate the judge — highly recommended for consistent sc
 Evaluates factual consistency against a reference text. Requires `expected.text` on the case.
 
 ```typescript
-import { factuality } from "agent-eval-kit/graders";
+import { factuality } from "agent-eval-kit";
 
 factuality()
 factuality({ passThreshold: 0.9 })
@@ -119,7 +119,7 @@ Checks three dimensions: accuracy, completeness, and absence of fabrication. Use
 Classifies output into categories. Requires at least 2 categories.
 
 ```typescript
-import { llmClassify } from "agent-eval-kit/graders";
+import { llmClassify } from "agent-eval-kit";
 
 llmClassify({
   categories: {
@@ -142,7 +142,7 @@ LLM judge calls are expensive. agent-eval-kit provides two caching strategies to
 Caches results for the duration of the process:
 
 ```typescript
-import { createCachingJudge } from "agent-eval-kit/graders";
+import { createCachingJudge } from "agent-eval-kit";
 
 judge: {
   call: createCachingJudge(myJudgeFn, { maxEntries: 1000 }),

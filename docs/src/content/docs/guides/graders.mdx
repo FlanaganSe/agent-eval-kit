@@ -31,7 +31,7 @@ See the [Graders API Reference](/agent-eval-kit/reference/graders-api/) for deta
 Graders are configured in a suite's `defaultGraders` array. Each entry wraps a grader function with optional scoring metadata:
 
 ```typescript
-import { contains, latency, llmRubric } from "agent-eval-kit/graders";
+import { contains, latency, llmRubric } from "agent-eval-kit";
 
 defaultGraders: [
   { grader: contains("Paris") },                          // weight 1.0 (default)
@@ -57,7 +57,7 @@ Per-grader pass threshold. The case-level threshold is inferred as the minimum a
 Compose graders with boolean logic using `all`, `any`, and `not`:
 
 ```typescript
-import { all, any, not, contains, toolCalled, latency } from "agent-eval-kit/graders";
+import { all, any, not, contains, toolCalled, latency } from "agent-eval-kit";
 
 // All must pass
 all([contains("Paris"), toolCalled("search"), latency(5000)])
