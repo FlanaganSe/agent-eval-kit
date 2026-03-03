@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import type {
 	Case,
 	CaseCategory,
@@ -20,6 +20,21 @@ import { computeAllTrialStats } from "./statistics.js";
 
 const SCHEMA_VERSION = "1.0.0";
 
+/**
+ * Generates a human-readable, time-sortable run ID.
+ * Format: `run-YYYYMMDD-HHmmss-XXXX` (e.g. `run-20260302-143022-a7f3`)
+ */
+export function generateRunId(now: Date = new Date()): string {
+	const y = now.getUTCFullYear();
+	const mo = String(now.getUTCMonth() + 1).padStart(2, "0");
+	const d = String(now.getUTCDate()).padStart(2, "0");
+	const h = String(now.getUTCHours()).padStart(2, "0");
+	const mi = String(now.getUTCMinutes()).padStart(2, "0");
+	const s = String(now.getUTCSeconds()).padStart(2, "0");
+	const suffix = randomBytes(2).toString("hex");
+	return `run-${y}${mo}${d}-${h}${mi}${s}-${suffix}`;
+}
+
 interface TrialWorkItem {
 	readonly testCase: Case;
 	readonly trialIndex: number;
@@ -40,7 +55,7 @@ export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promi
 	const dispatcher = createHookDispatcher(options.plugins ?? [], {
 		warn: (msg) => process.stderr.write(`${msg}\n`),
 	});
-	const runId = randomUUID();
+	const runId = generateRunId();
 	const startTime = Date.now();
 	const trialCount = options.trials ?? 1;
 	const totalTrialCount = suite.cases.length * trialCount;
@@ -131,7 +146,7 @@ async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Pro
 		throw new Error("--mode=judge-only requires --run-id=<id> to specify a previous run.");
 	}
 
-	const runId = randomUUID();
+	const runId = generateRunId();
 	const startTime = Date.now();
 
 	const trials = await runJudgeOnly({

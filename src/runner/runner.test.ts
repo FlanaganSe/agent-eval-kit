@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { RunSchema } from "../config/schema.js";
 import type { ResolvedSuite, RunOptions, TargetOutput } from "../config/types.js";
-import { runSuite } from "./runner.js";
+import { generateRunId, runSuite } from "./runner.js";
 
 const mockTarget = async (input: Record<string, unknown>): Promise<TargetOutput> => ({
 	text: `Response for: ${input.query}`,
@@ -107,5 +107,28 @@ describe("runSuite", () => {
 		};
 		await runSuite(sequentialSuite, options);
 		expect(order).toEqual(["hello", "world"]);
+	});
+});
+
+describe("generateRunId", () => {
+	it("produces the expected format", () => {
+		const id = generateRunId(new Date("2026-03-02T14:30:22.000Z"));
+		expect(id).toMatch(/^run-20260302-143022-[0-9a-f]{4}$/);
+	});
+
+	it("is unique across calls", () => {
+		const ids = new Set(Array.from({ length: 100 }, () => generateRunId()));
+		expect(ids.size).toBe(100);
+	});
+
+	it("passes SAFE_ID validation", () => {
+		const id = generateRunId();
+		expect(/^[a-zA-Z0-9_-]+$/.test(id)).toBe(true);
+	});
+
+	it("sorts chronologically", () => {
+		const earlier = generateRunId(new Date("2026-01-01T00:00:00Z"));
+		const later = generateRunId(new Date("2026-12-31T23:59:59Z"));
+		expect(earlier < later).toBe(true);
 	});
 });

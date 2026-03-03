@@ -154,7 +154,7 @@ export type { ReporterOptions, ReporterPlugin } from "./reporters/types.js";
 // Runner
 export { type CostEstimate, estimateCost } from "./runner/cost-estimator.js";
 export { createTokenBucketLimiter } from "./runner/rate-limiter.js";
-export { runSuite } from "./runner/runner.js";
+export { generateRunId, runSuite } from "./runner/runner.js";
 export { computeAllTrialStats, computeTrialStats, wilsonInterval } from "./runner/statistics.js";
 // Storage
 export { listRuns, loadRun, saveRun } from "./storage/run-store.js";

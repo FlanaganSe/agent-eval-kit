@@ -49,7 +49,7 @@ export default defineCommand({
 
 		// Header
 		const header = [
-			"ID".padEnd(16),
+			"ID".padEnd(28),
 			"Suite".padEnd(16),
 			"Mode".padEnd(12),
 			"Pass Rate".padEnd(12),
@@ -59,7 +59,7 @@ export default defineCommand({
 		process.stdout.write(`${"─".repeat(header.length)}\n`);
 
 		for (const run of display) {
-			const id = run.id.slice(0, 12).padEnd(16);
+			const id = run.id.padEnd(28);
 			const suite = run.suiteId.padEnd(16);
 			const mode = run.mode.padEnd(12);
 			const rate = (run.passRate * 100).toFixed(1);
