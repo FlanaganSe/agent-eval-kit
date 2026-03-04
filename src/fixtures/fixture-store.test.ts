@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -83,6 +83,40 @@ describe("writeFixture + readFixture", () => {
 			expect(result.output.text).toBe(sampleOutput.text);
 			expect(result.ageDays).toBeGreaterThanOrEqual(0);
 		}
+	});
+});
+
+describe("corrupt fixture handling", () => {
+	it("returns miss for corrupt JSON in fixture file", async () => {
+		await writeFixture("suite-a", "H01", sampleOutput, "abc123", opts);
+		const filePath = join(tempDir, sanitizeName("suite-a"), `${sanitizeName("H01")}.jsonl`);
+		await writeFile(filePath, "not valid json\nalso not valid\n", "utf8");
+
+		const result = await readFixture("suite-a", "H01", "abc123", opts);
+		expect(result.status).toBe("miss");
+	});
+
+	it("returns miss for fixture with wrong structure", async () => {
+		await writeFixture("suite-a", "H01", sampleOutput, "abc123", opts);
+		const filePath = join(tempDir, sanitizeName("suite-a"), `${sanitizeName("H01")}.jsonl`);
+		await writeFile(
+			filePath,
+			`${JSON.stringify({ foo: 1 })}\n${JSON.stringify({ bar: 2 })}\n`,
+			"utf8",
+		);
+
+		const result = await readFixture("suite-a", "H01", "abc123", opts);
+		expect(result.status).toBe("miss");
+	});
+
+	it("returns miss for truncated fixture file", async () => {
+		const dir = join(tempDir, sanitizeName("suite-a"));
+		await mkdir(dir, { recursive: true });
+		const filePath = join(dir, `${sanitizeName("H01")}.jsonl`);
+		await writeFile(filePath, '{"_meta":{}\n', "utf8");
+
+		const result = await readFixture("suite-a", "H01", "abc123", opts);
+		expect(result.status).toBe("miss");
 	});
 });
 

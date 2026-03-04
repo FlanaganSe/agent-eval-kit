@@ -1,4 +1,5 @@
-import { join } from "node:path";
+import { stat } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { defineCommand } from "citty";
 import { compareRuns } from "../../comparison/compare.js";
 import { formatComparisonReport } from "../../comparison/format.js";
@@ -12,6 +13,7 @@ import { globalArgs } from "../shared-args.js";
 export interface ExecuteCompareArgs {
 	readonly verbose?: boolean | undefined;
 	readonly quiet?: boolean | undefined;
+	readonly config?: string | undefined;
 	readonly base?: string | undefined;
 	readonly compare?: string | undefined;
 	readonly "fail-on-regression"?: boolean | undefined;
@@ -31,7 +33,8 @@ export async function executeCompare(args: ExecuteCompareArgs): Promise<void> {
 			throw new ConfigError("Missing required argument: --compare <runId>");
 		}
 
-		const runDir = join(process.cwd(), ".eval-runs");
+		const projectDir = await resolveProjectDir(args.config);
+		const runDir = join(projectDir, ".eval-runs");
 
 		const baseRun = await loadRun(args.base, runDir).catch((err: unknown) => {
 			throw new ConfigError(
@@ -82,6 +85,14 @@ export async function executeCompare(args: ExecuteCompareArgs): Promise<void> {
 		logger.error(err instanceof Error ? err.message : String(err));
 		process.exitCode = getExitCode(err);
 	}
+}
+
+async function resolveProjectDir(configArg?: string): Promise<string> {
+	if (!configArg) return process.cwd();
+	const resolved = resolve(configArg);
+	const s = await stat(resolved).catch(() => null);
+	if (s?.isFile()) return dirname(resolved);
+	return resolved;
 }
 
 // ─── citty command definition ───────────────────────────────────────────────

@@ -109,8 +109,19 @@ export async function readFixture(
 		return { status: "miss", reason: "not-found" };
 	}
 
-	const meta = JSON.parse(lines[0] as string) as FixtureMeta;
-	const data = JSON.parse(lines[1] as string) as { readonly output: TargetOutput };
+	let meta: FixtureMeta;
+	let data: { readonly output: TargetOutput };
+	try {
+		meta = JSON.parse(lines[0] as string) as FixtureMeta;
+		data = JSON.parse(lines[1] as string) as { readonly output: TargetOutput };
+	} catch {
+		return { status: "miss", reason: "not-found" };
+	}
+
+	// Validate required nested fields exist
+	if (typeof meta?._meta?.configHash !== "string" || typeof meta._meta.recordedAt !== "string") {
+		return { status: "miss", reason: "not-found" };
+	}
 
 	// Check config hash
 	if (meta._meta.configHash !== configHash) {

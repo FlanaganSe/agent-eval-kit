@@ -1,7 +1,17 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { RunSchema } from "../config/schema.js";
+import { z } from "zod";
+import { RunModeSchema, RunSchema } from "../config/schema.js";
 import type { Run, RunMeta } from "../config/types.js";
+
+/** Lightweight schema for extracting metadata from run files without full validation. */
+const RunFileMetaSchema = z.object({
+	id: z.string(),
+	suiteId: z.string(),
+	mode: RunModeSchema,
+	timestamp: z.string(),
+	summary: z.object({ passRate: z.number() }).optional(),
+});
 
 const DEFAULT_DIR = ".eval-runs";
 
@@ -85,18 +95,19 @@ export async function listRuns(baseDir?: string): Promise<readonly RunMeta[]> {
 
 		try {
 			const content = await readFile(join(dir, entry), "utf-8");
-			const parsed = JSON.parse(content) as Record<string, unknown>;
-			const summary = parsed.summary as Record<string, unknown> | undefined;
+			const parsed: unknown = JSON.parse(content);
+			const result = RunFileMetaSchema.safeParse(parsed);
+			if (!result.success) continue;
 
 			runs.push({
-				id: parsed.id as string,
-				suiteId: parsed.suiteId as string,
-				mode: parsed.mode as "live" | "replay" | "judge-only",
-				timestamp: parsed.timestamp as string,
-				passRate: (summary?.passRate as number) ?? 0,
+				id: result.data.id,
+				suiteId: result.data.suiteId,
+				mode: result.data.mode,
+				timestamp: result.data.timestamp,
+				passRate: result.data.summary?.passRate ?? 0,
 			});
 		} catch {
-			// Skip corrupt files
+			// Skip files with invalid JSON
 		}
 	}
 

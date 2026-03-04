@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -92,5 +92,35 @@ describe("listRuns", () => {
 		await saveRun(validRun, tempDir);
 		const runs = await listRuns(tempDir);
 		expect(runs[0]?.passRate).toBe(1);
+	});
+
+	it("skips files with invalid JSON", async () => {
+		await saveRun(validRun, tempDir);
+		await writeFile(join(tempDir, "corrupt.json"), "not json{{{", "utf-8");
+
+		const runs = await listRuns(tempDir);
+		expect(runs).toHaveLength(1);
+		expect(runs[0]?.id).toBe("test-run-001");
+	});
+
+	it("skips files with wrong structure", async () => {
+		await saveRun(validRun, tempDir);
+		await writeFile(join(tempDir, "wrong-structure.json"), JSON.stringify({ foo: 1 }), "utf-8");
+
+		const runs = await listRuns(tempDir);
+		expect(runs).toHaveLength(1);
+		expect(runs[0]?.id).toBe("test-run-001");
+	});
+
+	it("skips files with missing required fields", async () => {
+		await saveRun(validRun, tempDir);
+		await writeFile(
+			join(tempDir, "partial.json"),
+			JSON.stringify({ id: "partial", suiteId: "s" }),
+			"utf-8",
+		);
+
+		const runs = await listRuns(tempDir);
+		expect(runs).toHaveLength(1);
 	});
 });
