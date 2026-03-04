@@ -80,7 +80,15 @@ export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promi
 			}
 
 			if (options.rateLimiter && options.mode === "live") {
-				await options.rateLimiter.acquire(options.signal);
+				try {
+					await options.rateLimiter.acquire(options.signal);
+				} catch {
+					if (options.signal?.aborted) {
+						aborted = true;
+						return null;
+					}
+					throw new Error("Rate limiter error");
+				}
 			}
 
 			const trial = await executeCase(item.testCase, suite, options, item.trialIndex);
@@ -267,7 +275,7 @@ async function executeCase(
 			if (options.strictFixtures) {
 				throw new Error(
 					`Fixture for case "${testCase.id}" is ${fixtureResult.ageDays} days old (TTL: ${options.fixtureOptions.ttlDays} days). ` +
-						`Re-record or pass --no-strict-fixtures.`,
+						`Re-record fixtures to refresh, or remove --strict-fixtures to allow stale data.`,
 				);
 			}
 			options.onFixtureStale?.(testCase.id, fixtureResult.ageDays);

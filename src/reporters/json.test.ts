@@ -1,7 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { RunSchema } from "../config/schema.js";
 import type { Run } from "../config/types.js";
 import { formatJsonReport } from "./json.js";
+import { jsonReporterPlugin } from "./json-reporter-plugin.js";
 
 const validRun: Run = {
 	schemaVersion: "1.0.0",
@@ -50,5 +54,32 @@ describe("formatJsonReport", () => {
 	it("outputs minified JSON when not pretty", () => {
 		const json = formatJsonReport(validRun, false);
 		expect(json).not.toContain("\n");
+	});
+});
+
+describe("jsonReporterPlugin", () => {
+	let tmpDir: string;
+
+	beforeEach(async () => {
+		tmpDir = await mkdtemp(join(tmpdir(), "json-report-"));
+	});
+
+	afterEach(async () => {
+		await rm(tmpDir, { recursive: true, force: true });
+	});
+
+	it("returns JSON string when no output path", async () => {
+		const result = await jsonReporterPlugin.report(validRun, {});
+		expect(typeof result).toBe("string");
+		expect(() => JSON.parse(result as string)).not.toThrow();
+	});
+
+	it("writes JSON to file when output path given", async () => {
+		const outputPath = join(tmpDir, "results.json");
+		const result = await jsonReporterPlugin.report(validRun, { output: outputPath });
+		expect(result).toBeUndefined();
+		const content = await readFile(outputPath, "utf-8");
+		expect(() => JSON.parse(content)).not.toThrow();
+		expect(content).toContain("smoke");
 	});
 });

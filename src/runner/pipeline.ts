@@ -48,8 +48,19 @@ export async function runGraderPipeline(
 			judge: context.judge,
 		};
 
-		const grade = await config.grader(output, expected, graderContext);
-		grades.push(grade);
+		try {
+			const grade = await config.grader(output, expected, graderContext);
+			grades.push(grade);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			grades.push({
+				pass: false,
+				score: 0,
+				reason: `Grader error: ${message}`,
+				graderName: graderContext.graderName || "unknown",
+				metadata: { error: true },
+			});
+		}
 	}
 
 	const caseThreshold = inferThreshold(configs);

@@ -79,7 +79,16 @@ export function computeAllTrialStats(
 	trials: readonly Trial[],
 	trialCount: number | undefined,
 ): Record<string, TrialStats> | undefined {
-	if (!trialCount || trialCount <= 1) return undefined;
+	// When trialCount is explicitly provided and <= 1, no multi-trial stats needed
+	if (trialCount !== undefined && trialCount <= 1) return undefined;
+
+	// When trialCount is not provided (e.g. judge-only without --trials),
+	// infer multi-trial from the data by checking for trialIndex markers
+	if (trialCount === undefined) {
+		const hasTrialMarkers = trials.some((t) => t.trialIndex !== undefined);
+		if (!hasTrialMarkers) return undefined;
+	}
+
 	if (trials.length === 0) return undefined;
 
 	const caseIds = [...new Set(trials.map((t) => t.caseId))];

@@ -81,4 +81,46 @@ describe("runGraderPipeline", () => {
 		expect(result.grades).toHaveLength(0);
 		expect(result.caseResult.pass).toBe(true);
 	});
+
+	it("catches grader throw and produces failing grade", async () => {
+		const throwingConfig: GraderConfig = {
+			grader: async () => {
+				throw new Error("judge API unavailable");
+			},
+		};
+
+		const result = await runGraderPipeline(
+			output,
+			undefined,
+			undefined,
+			[throwingConfig, passingConfig],
+			pipelineCtx,
+		);
+		// Both graders still run — the throwing one produces a synthetic fail
+		expect(result.grades).toHaveLength(2);
+		expect(result.grades[0]?.pass).toBe(false);
+		expect(result.grades[0]?.score).toBe(0);
+		expect(result.grades[0]?.reason).toContain("Grader error:");
+		expect(result.grades[0]?.reason).toContain("judge API unavailable");
+		expect(result.grades[0]?.metadata).toEqual({ error: true });
+		// Second grader still ran successfully
+		expect(result.grades[1]?.pass).toBe(true);
+	});
+
+	it("catches non-Error throws in graders", async () => {
+		const throwingConfig: GraderConfig = {
+			grader: async () => {
+				throw "string error";
+			},
+		};
+
+		const result = await runGraderPipeline(
+			output,
+			undefined,
+			undefined,
+			[throwingConfig],
+			pipelineCtx,
+		);
+		expect(result.grades[0]?.reason).toContain("Grader error: string error");
+	});
 });

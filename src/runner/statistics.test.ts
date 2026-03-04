@@ -135,6 +135,7 @@ describe("computeAllTrialStats", () => {
 	it("returns undefined for single-trial runs", () => {
 		const trials = [makeTrial({ caseId: "H01" })];
 		expect(computeAllTrialStats(trials, 1)).toBeUndefined();
+		// No trialIndex markers → inferred as single-trial
 		expect(computeAllTrialStats(trials, undefined)).toBeUndefined();
 	});
 
@@ -155,5 +156,30 @@ describe("computeAllTrialStats", () => {
 		expect(stats?.H01?.flaky).toBe(true);
 		expect(stats?.H02?.trialCount).toBe(2);
 		expect(stats?.H02?.flaky).toBe(false);
+	});
+
+	it("infers multi-trial from trialIndex when trialCount is undefined (judge-only mode)", () => {
+		const trials = [
+			makeTrial({ caseId: "H01", status: "pass", trialIndex: 0 }),
+			makeTrial({ caseId: "H01", status: "fail", score: 0, trialIndex: 1 }),
+			makeTrial({ caseId: "H01", status: "pass", trialIndex: 2 }),
+			makeTrial({ caseId: "H02", status: "pass", trialIndex: 0 }),
+			makeTrial({ caseId: "H02", status: "pass", trialIndex: 1 }),
+			makeTrial({ caseId: "H02", status: "pass", trialIndex: 2 }),
+		];
+		const stats = computeAllTrialStats(trials, undefined);
+		expect(stats).toBeDefined();
+		expect(stats?.H01?.trialCount).toBe(3);
+		expect(stats?.H01?.flaky).toBe(true);
+		expect(stats?.H02?.trialCount).toBe(3);
+		expect(stats?.H02?.passCount).toBe(3);
+	});
+
+	it("returns undefined when trialCount is undefined and no trialIndex markers", () => {
+		const trials = [
+			makeTrial({ caseId: "H01", status: "pass" }),
+			makeTrial({ caseId: "H02", status: "fail", score: 0 }),
+		];
+		expect(computeAllTrialStats(trials, undefined)).toBeUndefined();
 	});
 });
