@@ -70,10 +70,6 @@ export const CaseSchema = z.strictObject({
 	tags: z.array(z.string()).readonly().optional(),
 });
 
-// Note: SuiteConfigSchema is intentionally NOT defined here because it contains
-// runtime-only types (target function, GraderFn) that are not serializable.
-// Suite validation happens at the runtime level in types.ts / loader.ts.
-
 export const ReplayConfigSchema = z.strictObject({
 	ttlDays: z.number().int().positive().default(14),
 	stripRaw: z.boolean().default(true),

@@ -1,7 +1,10 @@
 import type { GraderFn } from "../types.js";
 
+/** Options for the `noHallucinatedNumbers` grader. Integers in the range 1900–2100 are always skipped as years regardless of options. */
 export interface NoHallucinatedNumbersOptions {
+	/** Relative tolerance for matching numbers (e.g., 0.005 = 0.5%). @default 0.005 */
 	readonly tolerance?: number | undefined;
+	/** Skip integers with absolute value less than 10 (commonly used as labels, not data). @default true */
 	readonly skipSmallIntegers?: boolean | undefined;
 }
 
@@ -72,6 +75,7 @@ export function noHallucinatedNumbers(options?: NoHallucinatedNumbersOptions): G
 	};
 }
 
+// Matches multi-digit numbers (with optional commas/dots as separators) OR single digits
 const NUMBER_PATTERN = /-?\d[\d,.]*\d|\d/g;
 
 function extractNumbersFromText(text: string): number[] {

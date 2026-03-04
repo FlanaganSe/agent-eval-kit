@@ -2,7 +2,7 @@ import type { ReporterPlugin } from "./types.js";
 
 const builtInReporters = new Map<string, () => Promise<ReporterPlugin>>();
 
-/** Resolve a reporter name or plugin to a ReporterPlugin. */
+/** Resolves a reporter name or plugin to a ReporterPlugin. Built-in names: `"console"`, `"json"`, `"junit"`, `"markdown"`. Throws on unknown string names. */
 export async function resolveReporter(
 	nameOrPlugin: string | ReporterPlugin,
 ): Promise<ReporterPlugin> {

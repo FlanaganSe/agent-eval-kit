@@ -8,13 +8,25 @@ import { VERSION } from "../index.js";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+/** Options for the fixture store controlling storage location, TTL, and behavior. */
 export interface FixtureStoreOptions {
+	/** Absolute path to the fixture storage directory. */
 	readonly baseDir: string;
+	/** Strip the `raw` field from target output when recording. */
 	readonly stripRaw: boolean;
+	/** Number of days before a fixture is considered stale. */
 	readonly ttlDays: number;
+	/** If true, the runner treats missing or stale fixtures as errors instead of falling back to live mode. */
 	readonly strictFixtures: boolean;
 }
 
+/**
+ * Discriminated union result from reading a fixture.
+ * - `"hit"`: fixture found and valid, includes the cached output
+ * - `"miss"` with `"not-found"`: no fixture file exists for this case
+ * - `"miss"` with `"config-hash-mismatch"`: fixture exists but was recorded with a different config
+ * - `"stale"`: fixture exists but has exceeded the TTL, includes the output and age for reporting
+ */
 export type FixtureReadResult =
 	| { readonly status: "hit"; readonly output: TargetOutput }
 	| { readonly status: "miss"; readonly reason: "not-found" }
@@ -25,18 +37,26 @@ export type FixtureReadResult =
 	  }
 	| { readonly status: "stale"; readonly output: TargetOutput; readonly ageDays: number };
 
+/** Metadata about a single fixture file. */
 export interface FixtureInfo {
 	readonly suiteId: string;
 	readonly caseId: string;
+	/** Age of the fixture in days since last modification. */
 	readonly ageDays: number;
+	/** Size of the fixture file on disk in bytes. */
 	readonly sizeBytes: number;
 }
 
+/** Aggregate statistics across all fixtures in the store. */
 export interface FixtureStatsResult {
 	readonly totalFixtures: number;
+	/** Total size of all fixture files in bytes. */
 	readonly totalBytes: number;
+	/** Number of distinct suites with recorded fixtures. */
 	readonly suiteCount: number;
+	/** Age of the oldest fixture in days. 0 if no fixtures exist. */
 	readonly oldestAgeDays: number;
+	/** Age of the newest fixture in days. 0 if no fixtures exist. */
 	readonly newestAgeDays: number;
 }
 

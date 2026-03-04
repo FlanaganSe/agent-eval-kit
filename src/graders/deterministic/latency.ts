@@ -1,6 +1,6 @@
 import type { GraderFn } from "../types.js";
 
-/** Checks that output.latencyMs is within the allowed threshold. */
+/** Checks that output.latencyMs is within the allowed threshold. Unlike `cost` and `tokenCount`, this always evaluates since `latencyMs` is a required field on TargetOutput. */
 export function latency(maxMs: number): GraderFn {
 	const graderName = `latency(${maxMs}ms)`;
 

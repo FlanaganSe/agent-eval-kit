@@ -1,21 +1,14 @@
-import type { Trial } from "../config/types.js";
+import type { Trial, TrialStats } from "../config/types.js";
 
-export interface TrialStats {
-	readonly trialCount: number;
-	readonly passCount: number;
-	readonly failCount: number;
-	readonly errorCount: number;
-	readonly passRate: number;
-	readonly meanScore: number;
-	readonly scoreStdDev: number;
-	readonly ci95Low: number;
-	readonly ci95High: number;
-	readonly flaky: boolean;
-}
+export type { TrialStats };
 
 /**
  * Computes Wilson score interval for a proportion.
  * Superior to normal approximation for small N and proportions near 0 or 1.
+ *
+ * @param passes - Number of successes
+ * @param total - Total number of trials
+ * @param z - Z-score for the desired confidence level (default 1.96 for 95% CI)
  */
 export function wilsonInterval(
 	passes: number,
@@ -34,6 +27,7 @@ export function wilsonInterval(
 	};
 }
 
+/** Computes aggregate statistics for all trials of a single case. Filters the full trial array by `caseId`, then computes pass rate, mean score, standard deviation, Wilson confidence intervals, and flakiness. */
 export function computeTrialStats(trials: readonly Trial[], caseId: string): TrialStats {
 	const caseTrials = trials.filter((t) => t.caseId === caseId);
 	const n = caseTrials.length;

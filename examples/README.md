@@ -130,6 +130,6 @@ agent-eval-kit run --config <config> --reporter markdown
 
 ## Cost
 
-Each run costs fractions of a cent with Haiku. The `text-grading` judge suites
-double the calls (target + judge). The `tool-agent` uses 2-3x calls per case
+The `text-grading` judge suites double the calls (target + judge). 
+The `tool-agent` uses 2-3x calls per case
 due to the tool-call loop. `--trials N` multiplies by N.

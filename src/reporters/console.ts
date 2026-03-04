@@ -1,8 +1,11 @@
 import pc from "picocolors";
 import type { Run, TrialStats } from "../config/types.js";
 
+/** Options for formatting a run as a human-readable console report. */
 export interface ConsoleReportOptions {
+	/** Enable ANSI color codes in output. @default true */
 	readonly color?: boolean | undefined;
+	/** Include per-grader details for each case. */
 	readonly verbose?: boolean | undefined;
 }
 
@@ -119,7 +122,8 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 }
 
 /**
- * Formats a Run artifact as a markdown summary (for GitHub Actions $GITHUB_STEP_SUMMARY).
+ * Formats a Run as a compact markdown summary table for GitHub Actions `$GITHUB_STEP_SUMMARY`.
+ * For a detailed per-grader markdown report, use `formatMarkdownReport` from `./markdown.ts`.
  */
 export function formatMarkdownSummary(run: Run): string {
 	const lines: string[] = [];

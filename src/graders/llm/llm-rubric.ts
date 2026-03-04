@@ -14,32 +14,49 @@ import {
 } from "./judge-parser.js";
 import { buildJudgePrompt } from "./judge-prompt.js";
 
+/** Options for the `llmRubric` LLM-as-judge grader. */
 export interface LlmRubricOptions {
-	/** Natural language evaluation criteria */
+	/** Natural language evaluation criteria the judge will score against. */
 	readonly criteria: string;
-	/** Optional few-shot examples for calibration */
+	/** Few-shot examples for calibrating the judge's scoring. Improves consistency across runs. */
 	readonly examples?: readonly LlmRubricExample[] | undefined;
-	/** Override the judge function from config */
+	/** Override the judge function from config for this grader only. */
 	readonly judge?: JudgeCallFn | undefined;
-	/** Override judge call options */
+	/** Override judge call options (temperature, model, maxTokens). */
 	readonly judgeOptions?: JudgeCallOptions | undefined;
-	/** Custom pass threshold (default: 0.75, i.e., score >= 3) */
+	/** Minimum normalized score (0-1) to pass. The judge scores 1-4; this threshold is applied after normalization. @default 0.75 (i.e., score >= 3) */
 	readonly passThreshold?: number | undefined;
 }
 
+/** A few-shot calibration example for `llmRubric`. Provides the judge with concrete scoring examples. */
 export interface LlmRubricExample {
+	/** Example output text to evaluate. */
 	readonly output: string;
+	/** Expected judge score (1 = poor, 4 = excellent). */
 	readonly score: 1 | 2 | 3 | 4;
+	/** Explanation of why this output deserves this score. */
 	readonly reasoning: string;
 }
 
 /**
  * LLM-as-judge grader that evaluates output against natural language criteria.
  *
+ * The judge scores 1-4, normalized to 0.25-1.0. Default pass threshold of 0.75
+ * requires a judge score of 3 ("Good") or higher.
+ *
  * @example
  * ```ts
- * llmRubric({ criteria: "The response is helpful and addresses the user's question." })
+ * // String shorthand
  * llmRubric("The response correctly identifies all entities.")
+ *
+ * // With calibration examples for consistent scoring
+ * llmRubric({
+ *   criteria: "The response is helpful and addresses the user's question.",
+ *   examples: [
+ *     { output: "Here is a detailed answer...", score: 4, reasoning: "Complete and accurate" },
+ *     { output: "I don't know.", score: 1, reasoning: "Does not address the question" },
+ *   ],
+ * })
  * ```
  */
 export function llmRubric(options: LlmRubricOptions): GraderFn;

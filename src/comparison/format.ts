@@ -1,8 +1,11 @@
 import pc from "picocolors";
 import type { CaseComparison, ChangeDirection, RunComparison } from "./types.js";
 
+/** Options for formatting a run comparison as a human-readable report. */
 export interface ComparisonFormatOptions {
+	/** Enable ANSI color codes in output. @default true */
 	readonly color?: boolean | undefined;
+	/** Show unchanged cases and include per-grader change details. */
 	readonly verbose?: boolean | undefined;
 }
 

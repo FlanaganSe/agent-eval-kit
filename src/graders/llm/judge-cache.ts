@@ -6,11 +6,9 @@ import type {
 	JudgeResponse,
 } from "../../config/types.js";
 
+/** Options for the in-memory judge cache. */
 export interface JudgeCacheOptions {
-	/**
-	 * Maximum cache entries. Evicts oldest entry when exceeded.
-	 * Default: 1000 (sufficient for most eval runs).
-	 */
+	/** Maximum cache entries. Evicts oldest entry when exceeded. @default 1000 */
 	readonly maxEntries?: number | undefined;
 }
 
@@ -23,6 +21,8 @@ export interface JudgeCacheOptions {
  *
  * @example
  * ```ts
+ * import { createCachingJudge, defineConfig } from "agent-eval-kit";
+ *
  * const cachedJudge = createCachingJudge(myJudgeCall);
  * defineConfig({ judge: { call: cachedJudge } });
  * ```
@@ -63,6 +63,7 @@ export function createCachingJudge(judge: JudgeCallFn, options?: JudgeCacheOptio
 	};
 }
 
+/** Computes a SHA-256 cache key from judge messages, model, and maxTokens. Temperature is excluded since only temperature-0 calls are cached. */
 export function computeCacheKey(
 	messages: readonly JudgeMessage[],
 	options?: JudgeCallOptions,

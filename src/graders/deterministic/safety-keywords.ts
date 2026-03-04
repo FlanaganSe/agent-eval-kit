@@ -1,6 +1,6 @@
 import type { GraderFn } from "../types.js";
 
-/** Checks that output.text does NOT contain any of the prohibited keywords. */
+/** Checks that output.text does NOT contain any of the prohibited keywords. Case-insensitive matching. */
 export function safetyKeywords(prohibited: readonly string[]): GraderFn {
 	const graderName = `safetyKeywords(${prohibited.length} keywords)`;
 	const lowerProhibited = prohibited.map((k) => k.toLowerCase());

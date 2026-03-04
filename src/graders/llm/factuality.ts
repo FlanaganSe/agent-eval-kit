@@ -9,12 +9,13 @@ import type {
 } from "../../config/types.js";
 import { llmRubric } from "./llm-rubric.js";
 
+/** Options for the `factuality` LLM-as-judge grader. Requires `expected.text` on each case. */
 export interface FactualityOptions {
-	/** Override the judge function from config */
+	/** Override the judge function from config for this grader only. */
 	readonly judge?: JudgeCallFn | undefined;
-	/** Override judge call options */
+	/** Override judge call options (temperature, model, maxTokens). */
 	readonly judgeOptions?: JudgeCallOptions | undefined;
-	/** Custom pass threshold (default: 0.75) */
+	/** Minimum normalized score (0-1) to pass. @default 0.75 */
 	readonly passThreshold?: number | undefined;
 }
 
@@ -49,13 +50,25 @@ const FACTUALITY_EXAMPLES = [
 
 /**
  * Factuality grader — evaluates whether output is factually consistent with
- * the expected reference. Requires `expected.text` to be set on the case.
+ * the expected reference. Requires `expected.text` to be set on each case.
  *
  * Implemented as a specialized llmRubric with locked criteria and calibration examples.
  *
  * @example
  * ```ts
- * factuality()
+ * import { factuality } from "agent-eval-kit";
+ *
+ * // In eval.config.ts — cases must include expected.text
+ * {
+ *   defaultGraders: [{ grader: factuality() }],
+ *   cases: [{
+ *     id: "capital",
+ *     input: { question: "What is the capital of France?" },
+ *     expected: { text: "The capital of France is Paris." },
+ *   }],
+ * }
+ *
+ * // With a lower pass threshold
  * factuality({ passThreshold: 0.5 })
  * ```
  */

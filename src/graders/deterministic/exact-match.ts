@@ -1,7 +1,10 @@
 import type { GraderFn } from "../types.js";
 
+/** Options for the `exactMatch` grader. */
 export interface ExactMatchOptions {
+	/** Trim leading/trailing whitespace before comparing. @default true */
 	readonly trim?: boolean | undefined;
+	/** Perform a case-sensitive comparison. @default true */
 	readonly caseSensitive?: boolean | undefined;
 }
 

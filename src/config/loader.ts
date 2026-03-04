@@ -14,22 +14,33 @@ import type {
 	SuiteConfig,
 } from "./types.js";
 
+/** Options for loading an eval configuration file. */
 export interface LoadConfigOptions {
+	/** Config file path or stem (without extension). Probes .ts/.mts/.js/.mjs extensions. @default "eval.config" */
 	readonly configPath?: string | undefined;
+	/** Working directory for resolving relative paths. @default process.cwd() */
 	readonly cwd?: string | undefined;
 }
 
+/** Fully validated and resolved eval configuration. All defaults are applied and case files are loaded. */
 export interface ValidatedConfig {
+	/** All suites with cases fully resolved from file paths. */
 	readonly suites: readonly ResolvedSuite[];
 	readonly run: {
+		/** Resolved default execution mode. @default "live" */
 		readonly defaultMode: RunMode;
+		/** Resolved timeout in milliseconds per target call. @default 30000 */
 		readonly timeoutMs: number;
 		readonly rateLimit?: number | undefined;
 	};
 	readonly judge?: JudgeConfig | undefined;
+	/** All plugins in registration order. Empty array if none configured. */
 	readonly plugins: readonly EvalPlugin[];
+	/** All reporters in registration order. Empty array if none configured. */
 	readonly reporters: readonly ReporterConfig[];
+	/** Resolved fixture storage directory path. */
 	readonly fixtureDir: string;
+	/** Absolute path to the project root (directory containing the config file). */
 	readonly projectDir: string;
 }
 

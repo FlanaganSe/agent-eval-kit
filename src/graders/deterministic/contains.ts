@@ -1,6 +1,8 @@
 import type { GraderFn } from "../types.js";
 
+/** Options for the `contains` and `notContains` graders. */
 export interface ContainsOptions {
+	/** Perform a case-sensitive match. @default false */
 	readonly caseSensitive?: boolean | undefined;
 }
 

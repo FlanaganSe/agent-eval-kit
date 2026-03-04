@@ -42,6 +42,7 @@ export interface PluginHooks {
 	readonly afterRun?: (run: Run) => Promise<void>;
 }
 
+/** Context passed to the `beforeRun` hook. Contains suite metadata for setup and logging. */
 export interface BeforeRunContext {
 	readonly suiteId: string;
 	readonly mode: RunMode;
@@ -49,6 +50,7 @@ export interface BeforeRunContext {
 	readonly trialCount: number;
 }
 
+/** Context passed to the `afterTrial` hook. Provides progress tracking counters for live display. */
 export interface AfterTrialContext {
 	readonly suiteId: string;
 	readonly completedCount: number;

@@ -74,6 +74,7 @@ export function formatMarkdownReport(run: Run): string {
 	return lines.join("\n");
 }
 
+/** Built-in Markdown reporter plugin. Produces a detailed per-case report with grader breakdowns. Writes to `options.output` if set, otherwise returns the markdown string. */
 export const markdownReporterPlugin: ReporterPlugin = {
 	name: "markdown",
 	report: async (run, options) => {

@@ -1,14 +1,22 @@
 import { type FSWatcher, watch as fsWatch } from "node:fs";
 
+/** Options for creating a file watcher. Used by `--watch` mode to re-run suites on file changes. */
 export interface FileWatcherOptions {
+	/** Directories to watch recursively. */
 	readonly paths: readonly string[];
+	/** Directory name patterns to ignore. @default ["node_modules", ".eval-runs", ".git", "dist", ".eval-cache"] */
 	readonly ignore?: readonly string[] | undefined;
+	/** Debounce interval in milliseconds. Batches rapid file changes into a single event. @default 300 */
 	readonly debounceMs?: number | undefined;
+	/** Error handler for fs.watch failures. Defaults to writing to stderr. */
 	readonly onError?: (error: unknown, path: string) => void;
 }
 
+/** File watcher handle returned by `createFileWatcher()`. */
 export interface FileWatcher {
+	/** Register a callback for batched file change events. */
 	readonly on: (event: "change", callback: (files: readonly string[]) => void) => void;
+	/** Stop watching and release all resources. */
 	readonly close: () => Promise<void>;
 }
 

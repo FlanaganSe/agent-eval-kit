@@ -1,5 +1,6 @@
 import type { GraderFn } from "../types.js";
 
+/** Matching mode for `toolSequence`: `"strict"` requires exact order and count, `"unordered"` requires same tools in any order, `"subset"` requires all expected tools to appear in actual (extras OK), `"superset"` requires all actual tools to appear in expected (fewer OK, extras fail). */
 export type ToolSequenceMode = "strict" | "unordered" | "subset" | "superset";
 
 /**

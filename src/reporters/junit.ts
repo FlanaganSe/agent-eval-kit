@@ -19,6 +19,7 @@ export function escapeXml(str: string): string {
 		.replace(/'/g, "&apos;");
 }
 
+/** Formats a Run artifact as a JUnit XML string. Multi-trial cases are grouped into a single testcase with pass/total counts. */
 export function formatJunitXml(run: Run): string {
 	// Group trials by caseId for multi-trial dedup
 	const caseMap = new Map<string, Trial[]>();
@@ -84,6 +85,7 @@ export function formatJunitXml(run: Run): string {
 	].join("\n");
 }
 
+/** Built-in JUnit XML reporter plugin. Writes to `options.output` if set, otherwise returns the XML string. */
 export const junitReporterPlugin: ReporterPlugin = {
 	name: "junit",
 	report: async (run, options) => {

@@ -8,8 +8,9 @@ import type {
 	RunComparison,
 } from "./types.js";
 
+/** Options for comparing two runs. */
 export interface CompareOptions {
-	/** Score delta threshold to count as regression/improvement (default: 0.05) */
+	/** Minimum score delta to classify a case as a regression or improvement. Deltas within this threshold are reported as unchanged. @default 0.05 */
 	readonly scoreThreshold?: number | undefined;
 }
 
@@ -64,8 +65,8 @@ export function compareRuns(base: Run, compare: Run, options?: CompareOptions): 
  * Builds a map from caseId to a representative trial.
  *
  * For multi-trial runs (trialStats present): aggregates all trials per case
- * using pass^k semantics (status) and mean score, consistent with how the
- * runner computes RunSummary.
+ * using pass^k semantics (pass only if all k trials pass, error only if all error,
+ * otherwise fail) and mean score, consistent with how the runner computes RunSummary.
  *
  * For single-trial runs: uses the trial directly.
  */

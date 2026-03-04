@@ -1,6 +1,8 @@
 import type { GraderFn } from "../types.js";
 
+/** Options for the `regex` grader. */
 export interface RegexOptions {
+	/** RegExp flags (e.g., `"i"` for case-insensitive, `"s"` for dotAll). Only used when `pattern` is a string. */
 	readonly flags?: string | undefined;
 }
 

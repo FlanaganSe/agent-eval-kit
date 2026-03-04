@@ -8,9 +8,13 @@ import type {
 } from "../../config/types.js";
 import { computeCacheKey } from "./judge-cache.js";
 
+/** Options for the persistent disk-based judge cache. */
 export interface DiskCacheOptions {
+	/** Directory for cache files. */
 	readonly cacheDir: string;
+	/** Number of days before a cache entry expires. */
 	readonly ttlDays: number;
+	/** Maximum number of cache entries. Oldest entries are evicted when exceeded. @default 10000 */
 	readonly maxEntries?: number | undefined;
 }
 
@@ -30,6 +34,17 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
  * Wraps a JudgeCallFn with persistent disk-based caching.
  * Only caches deterministic calls (temperature 0 or undefined).
  * Cache key is the same SHA-256 hash used by the in-memory cache.
+ *
+ * @example
+ * ```ts
+ * import { createDiskCachingJudge, defineConfig } from "agent-eval-kit";
+ *
+ * const cachedJudge = createDiskCachingJudge(myJudgeCall, {
+ *   cacheDir: ".eval-cache/judge", // default
+ *   ttlDays: 7,                     // default
+ * });
+ * defineConfig({ judge: { call: cachedJudge } });
+ * ```
  */
 export function createDiskCachingJudge(
 	judge: JudgeCallFn,
@@ -139,7 +154,7 @@ async function evictIfNeeded(cacheDir: string, maxEntries: number): Promise<void
 	}
 }
 
-/** Clear all judge cache entries. Returns count deleted. */
+/** Deletes all cached judge entries from disk and removes the cache directory. Returns the number of entries deleted, or 0 if the directory did not exist. */
 export async function clearJudgeCache(cacheDir: string = DEFAULT_CACHE_DIR): Promise<number> {
 	try {
 		const files = await readdir(cacheDir);
@@ -151,7 +166,7 @@ export async function clearJudgeCache(cacheDir: string = DEFAULT_CACHE_DIR): Pro
 	}
 }
 
-/** Get judge cache stats. */
+/** Returns the number of cached entries and total size in bytes. Returns zeros if the cache directory does not exist. */
 export async function judgeCacheStats(
 	cacheDir: string = DEFAULT_CACHE_DIR,
 ): Promise<{ entries: number; totalBytes: number }> {

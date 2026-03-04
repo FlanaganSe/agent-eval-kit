@@ -1,6 +1,6 @@
 import type { GraderFn } from "../types.js";
 
-/** Checks that output.cost is within the allowed budget. */
+/** Checks that output.cost is within the allowed budget. Passes silently when `output.cost` is undefined (target did not report cost). */
 export function cost(maxDollars: number): GraderFn {
 	const graderName = `cost($${maxDollars})`;
 

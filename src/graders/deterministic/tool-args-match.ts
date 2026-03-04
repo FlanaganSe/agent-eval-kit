@@ -1,5 +1,6 @@
 import type { GraderFn } from "../types.js";
 
+/** Matching mode for `toolArgsMatch`: `"exact"` requires deep equality, `"subset"` checks that expected keys exist with matching values, `"contains"` is like subset but string values use `.includes()`. */
 export type ToolArgsMatchMode = "exact" | "subset" | "contains";
 
 /**

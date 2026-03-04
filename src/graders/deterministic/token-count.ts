@@ -1,6 +1,6 @@
 import type { GraderFn } from "../types.js";
 
-/** Checks that total token usage (input + output) is within the allowed limit. */
+/** Checks that total token usage (input + output) is within the allowed limit. Passes silently when `output.tokenUsage` is undefined (target did not report token usage). */
 export function tokenCount(maxTokens: number): GraderFn {
 	const graderName = `tokenCount(${maxTokens})`;
 

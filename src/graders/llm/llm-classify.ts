@@ -9,12 +9,13 @@ import type {
 import { parseClassificationResponse } from "./classify-parser.js";
 import { buildClassificationPrompt } from "./classify-prompt.js";
 
+/** Options for the `llmClassify` LLM-as-judge grader. Requires at least 2 categories. */
 export interface LlmClassifyOptions {
-	/** The categories to classify into. Map of category name → description. */
+	/** Categories to classify into. Map of category name to description. Must have at least 2 entries. */
 	readonly categories: Readonly<Record<string, string>>;
-	/** Optional classification criteria (additional instruction for the judge). */
+	/** Additional instruction for the judge beyond the category descriptions. */
 	readonly criteria?: string | undefined;
-	/** Override the judge function from config. */
+	/** Override the judge function from config for this grader only. */
 	readonly judge?: JudgeCallFn | undefined;
 }
 
@@ -23,10 +24,13 @@ export interface LlmClassifyOptions {
  *
  * Expected value: `expected.metadata.classification` (string matching a category key).
  * Pass condition: Judge's classification matches expected classification.
+ * When no expected classification is set, the grader always passes (classification-only mode
+ * — useful for labeling output without asserting a specific category).
  * Score: 1.0 for exact match, 0.0 for mismatch.
  *
  * @example
  * ```ts
+ * // Assert a specific classification
  * llmClassify({
  *   categories: {
  *     helpful: "The response directly answers the user's question",
@@ -34,6 +38,9 @@ export interface LlmClassifyOptions {
  *     unhelpful: "The response does not address the question",
  *   },
  * })
+ *
+ * // Classification-only (always passes, label in metadata)
+ * // Omit expected.metadata.classification on the case
  * ```
  */
 export function llmClassify(options: LlmClassifyOptions): GraderFn {

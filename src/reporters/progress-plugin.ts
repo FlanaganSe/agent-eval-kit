@@ -1,8 +1,11 @@
 import type { EvalPlugin } from "../plugin/types.js";
 
+/** Options for the built-in progress display plugin. */
 export interface ProgressPluginOptions {
+	/** Writable stream for progress output. @default process.stderr */
 	readonly stream?: NodeJS.WritableStream;
-	readonly noColor?: boolean;
+	/** Disable ANSI color codes in progress output. @default false */
+	readonly noColor?: boolean | undefined;
 }
 
 const STATUS_SYMBOLS = {
