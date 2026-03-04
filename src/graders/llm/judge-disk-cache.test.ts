@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -107,6 +107,41 @@ describe("createDiskCachingJudge", () => {
 		vi.useRealTimers();
 
 		// Second call should miss cache due to TTL
+		expect(callCount()).toBe(2);
+	});
+
+	it("treats corrupt cache entry as cache miss", async () => {
+		const { judge, callCount } = createMockJudge();
+		const cached = createDiskCachingJudge(judge, { cacheDir: tempDir });
+		const messages = [{ role: "user" as const, content: "corrupt-test" }];
+
+		// Write a corrupt cache file
+		await cached(messages);
+		expect(callCount()).toBe(1);
+
+		// Corrupt the cache file
+		const files = await readdir(tempDir);
+		const cacheFile = files.find((f) => f.endsWith(".json")) ?? "";
+		expect(cacheFile).not.toBe("");
+		await writeFile(join(tempDir, cacheFile), '{"broken": true}', "utf8");
+
+		// Should miss cache and call judge again
+		await cached(messages);
+		expect(callCount()).toBe(2);
+	});
+
+	it("handles non-JSON cache files gracefully", async () => {
+		const { judge, callCount } = createMockJudge();
+		const cached = createDiskCachingJudge(judge, { cacheDir: tempDir });
+		const messages = [{ role: "user" as const, content: "non-json-test" }];
+
+		await cached(messages);
+		const files = await readdir(tempDir);
+		const cacheFile = files.find((f) => f.endsWith(".json")) ?? "";
+		await writeFile(join(tempDir, cacheFile), "not json at all", "utf8");
+
+		// Should miss cache and call judge again
+		await cached(messages);
 		expect(callCount()).toBe(2);
 	});
 

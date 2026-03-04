@@ -222,20 +222,37 @@ describe("createHookDispatcher", () => {
 			expect(order).toEqual(["first", "second"]);
 		});
 
-		it("propagates errors", async () => {
+		it("swallows errors and continues to next plugin", async () => {
+			const order: string[] = [];
+			const warnings: string[] = [];
 			const plugins: EvalPlugin[] = [
 				{
 					name: "failing",
 					version: "1.0.0",
 					hooks: {
 						afterRun: async () => {
+							order.push("failing");
 							throw new Error("teardown failed");
 						},
 					},
 				},
+				{
+					name: "healthy",
+					version: "1.0.0",
+					hooks: {
+						afterRun: async () => {
+							order.push("healthy");
+						},
+					},
+				},
 			];
-			const dispatcher = createHookDispatcher(plugins);
-			await expect(dispatcher.afterRun(mockRun)).rejects.toThrow("teardown failed");
+			const dispatcher = createHookDispatcher(plugins, {
+				warn: (msg) => warnings.push(msg),
+			});
+			await dispatcher.afterRun(mockRun);
+			expect(order).toEqual(["failing", "healthy"]);
+			expect(warnings).toHaveLength(1);
+			expect(warnings[0]).toContain("Plugin 'failing' afterRun hook failed: teardown failed");
 		});
 	});
 

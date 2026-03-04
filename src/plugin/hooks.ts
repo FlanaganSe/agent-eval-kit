@@ -10,8 +10,8 @@ export interface HookDispatcher {
 /**
  * Creates a hook dispatcher from registered plugins.
  * Hooks execute sequentially in plugin registration order.
- * afterTrial errors are logged and swallowed (non-breaking).
- * beforeRun and afterRun errors propagate (breaking).
+ * afterTrial and afterRun errors are logged and swallowed (non-breaking).
+ * beforeRun errors propagate (breaking).
  */
 export function createHookDispatcher(
 	plugins: readonly EvalPlugin[],
@@ -49,8 +49,14 @@ export function createHookDispatcher(
 		},
 
 		async afterRun(run) {
-			for (const { hook } of afterRunHooks) {
-				await hook(run);
+			for (const { name, hook } of afterRunHooks) {
+				try {
+					await hook(run);
+				} catch (error) {
+					logger?.warn(
+						`Plugin '${name}' afterRun hook failed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
 			}
 		},
 	};

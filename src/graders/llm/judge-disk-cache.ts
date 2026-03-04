@@ -25,6 +25,18 @@ interface DiskCacheEntry {
 	readonly cachedAt: string;
 }
 
+function isDiskCacheEntry(value: unknown): value is DiskCacheEntry {
+	if (!value || typeof value !== "object") return false;
+	const obj = value as Record<string, unknown>;
+	return (
+		typeof obj.key === "string" &&
+		typeof obj.cachedAt === "string" &&
+		obj.response !== null &&
+		typeof obj.response === "object" &&
+		typeof (obj.response as Record<string, unknown>).text === "string"
+	);
+}
+
 const DEFAULT_CACHE_DIR = ".eval-cache/judge";
 const DEFAULT_TTL_DAYS = 7;
 const DEFAULT_MAX_ENTRIES = 10_000;
@@ -95,7 +107,11 @@ async function readCacheEntry(filePath: string, ttlDays: number): Promise<JudgeR
 		}
 
 		const content = await readFile(filePath, "utf8");
-		const entry = JSON.parse(content) as DiskCacheEntry;
+		const entry = JSON.parse(content) as unknown;
+		if (!isDiskCacheEntry(entry)) {
+			await rm(filePath, { force: true });
+			return null;
+		}
 		return entry.response;
 	} catch {
 		return null;

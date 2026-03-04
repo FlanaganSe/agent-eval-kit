@@ -230,4 +230,147 @@ export default {
 		const config = await loadConfig({ configPath: "custom.config", cwd: tempDir });
 		expect(config.suites[0]?.name).toBe("custom");
 	});
+
+	it("rejects concurrency: 0", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		concurrency: 0,
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/concurrency.*positive integer/i);
+	});
+
+	it("rejects negative concurrency", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		concurrency: -1,
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/concurrency.*positive integer/i);
+	});
+
+	it("rejects passRate > 1", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		gates: { passRate: 2.0 },
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/passRate.*between 0 and 1/i);
+	});
+
+	it("rejects negative passRate", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		gates: { passRate: -0.5 },
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/passRate.*between 0 and 1/i);
+	});
+
+	it("rejects invalid run.defaultMode", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+	}],
+	run: { defaultMode: "offline" },
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(
+			/defaultMode.*live, replay, judge-only/i,
+		);
+	});
+
+	it("rejects run.timeoutMs: 0", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+	}],
+	run: { timeoutMs: 0 },
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/timeoutMs.*positive integer/i);
+	});
+
+	it("resolves fixtureDir to absolute path", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		const config = await loadConfig({ cwd: tempDir });
+		expect(config.fixtureDir).toBe(join(tempDir, ".eval-fixtures"));
+		expect(config.fixtureDir.startsWith("/")).toBe(true);
+	});
+
+	it("resolves custom fixtureDir to absolute path", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+	}],
+	fixtureDir: "data/fixtures",
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		const config = await loadConfig({ cwd: tempDir });
+		expect(config.fixtureDir).toBe(join(tempDir, "data/fixtures"));
+	});
+
+	it("accepts valid numeric config values", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		concurrency: 5,
+		gates: { passRate: 0.95, maxCost: 10, p95LatencyMs: 5000 },
+		replay: { ttlDays: 30 },
+	}],
+	run: { defaultMode: "replay", timeoutMs: 60000, rateLimit: 100 },
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		const config = await loadConfig({ cwd: tempDir });
+		expect(config.suites[0]?.concurrency).toBe(5);
+	});
 });

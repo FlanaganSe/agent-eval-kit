@@ -1,4 +1,5 @@
 import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { handleDescribeConfig } from "./describe-config.js";
 import { createTempConfig } from "./test-helpers.js";
@@ -63,7 +64,7 @@ describe("handleDescribeConfig", () => {
 		const result = await handleDescribeConfig({} as Record<string, never>, tempDir);
 		const data = JSON.parse(result.content[0].text);
 
-		expect(data.fixtureDir).toBe(".my-fixtures");
+		expect(data.fixtureDir).toBe(join(tempDir, ".my-fixtures"));
 	});
 
 	it("returns error for missing config", async () => {

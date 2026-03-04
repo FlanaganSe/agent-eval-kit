@@ -63,7 +63,7 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 	validateConfigShape(raw);
 	const config = raw;
 
-	const fixtureDir = config.fixtureDir ?? ".eval-fixtures";
+	const fixtureDir = resolve(basePath, config.fixtureDir ?? ".eval-fixtures");
 	assertSafeFixtureDir(fixtureDir, basePath);
 
 	const resolvedSuites = await resolveSuites(config.suites, basePath);
@@ -88,6 +88,18 @@ export async function loadConfig(options?: LoadConfigOptions): Promise<Validated
 const CONFIG_EXTENSIONS = [".ts", ".mts", ".js", ".mjs"] as const;
 
 async function resolveConfigFile(stem: string, basePath: string): Promise<string | undefined> {
+	// If the path already has a known config extension, try it as-is first
+	if (CONFIG_EXTENSIONS.some((ext) => stem.endsWith(ext))) {
+		const candidate = resolve(basePath, stem);
+		try {
+			await access(candidate);
+			return candidate;
+		} catch {
+			// File doesn't exist with that exact name
+		}
+	}
+
+	// Probe each extension
 	for (const ext of CONFIG_EXTENSIONS) {
 		const candidate = resolve(basePath, `${stem}${ext}`);
 		try {
@@ -111,6 +123,8 @@ async function importConfig(filePath: string): Promise<EvalConfig | undefined> {
 		);
 	}
 }
+
+const VALID_MODES: readonly RunMode[] = ["live", "replay", "judge-only"] as const;
 
 function validateConfigShape(config: unknown): asserts config is EvalConfig {
 	if (!config || typeof config !== "object") {
@@ -143,6 +157,64 @@ function validateConfigShape(config: unknown): asserts config is EvalConfig {
 				`suites[${i}] ("${suite.name}"): 'cases' must be an array or a file path string`,
 			);
 		}
+
+		// Validate numeric suite fields
+		validatePositiveInt(suite.concurrency, `suites[${i}].concurrency`);
+		if (suite.gates && typeof suite.gates === "object") {
+			const gates = suite.gates as Record<string, unknown>;
+			validateRange(gates.passRate, 0, 1, `suites[${i}].gates.passRate`);
+			validateNonNegative(gates.maxCost, `suites[${i}].gates.maxCost`);
+			validatePositiveNumber(gates.p95LatencyMs, `suites[${i}].gates.p95LatencyMs`);
+		}
+		if (suite.replay && typeof suite.replay === "object") {
+			const replay = suite.replay as Record<string, unknown>;
+			validatePositiveNumber(replay.ttlDays, `suites[${i}].replay.ttlDays`);
+		}
+	}
+
+	// Validate top-level run options
+	if (cfg.run && typeof cfg.run === "object") {
+		const run = cfg.run as Record<string, unknown>;
+		if (run.defaultMode !== undefined) {
+			if (
+				typeof run.defaultMode !== "string" ||
+				!VALID_MODES.includes(run.defaultMode as RunMode)
+			) {
+				throw new Error(
+					`run.defaultMode must be one of ${VALID_MODES.join(", ")}, got '${String(run.defaultMode)}'`,
+				);
+			}
+		}
+		validatePositiveInt(run.timeoutMs, "run.timeoutMs");
+		validatePositiveInt(run.rateLimit, "run.rateLimit");
+	}
+}
+
+function validatePositiveInt(value: unknown, field: string): void {
+	if (value === undefined || value === null) return;
+	if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+		throw new Error(`${field} must be a positive integer, got ${String(value)}`);
+	}
+}
+
+function validatePositiveNumber(value: unknown, field: string): void {
+	if (value === undefined || value === null) return;
+	if (typeof value !== "number" || value <= 0 || !Number.isFinite(value)) {
+		throw new Error(`${field} must be a positive number, got ${String(value)}`);
+	}
+}
+
+function validateNonNegative(value: unknown, field: string): void {
+	if (value === undefined || value === null) return;
+	if (typeof value !== "number" || value < 0 || !Number.isFinite(value)) {
+		throw new Error(`${field} must be a non-negative number, got ${String(value)}`);
+	}
+}
+
+function validateRange(value: unknown, min: number, max: number, field: string): void {
+	if (value === undefined || value === null) return;
+	if (typeof value !== "number" || value < min || value > max || !Number.isFinite(value)) {
+		throw new Error(`${field} must be between ${min} and ${max}, got ${String(value)}`);
 	}
 }
 
