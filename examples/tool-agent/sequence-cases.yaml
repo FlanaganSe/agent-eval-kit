@@ -1,0 +1,5 @@
+- id: weather-then-convert
+  input:
+    prompt: "Get the weather in London, then convert the temperature to Fahrenheit. Do these steps in order."
+    system: "You are a helpful assistant with access to tools. Always use the appropriate tool. Respond with a brief summary after getting tool results."
+  category: multi_step

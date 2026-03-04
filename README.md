@@ -94,6 +94,18 @@ agent-eval-kit run --mode replay
 agent-eval-kit compare --base <run-id> --compare <run-id>
 ```
 
+## Examples
+
+Working examples in [`examples/`](examples/) show every feature in action:
+
+| Example | What it covers | Run it |
+|---------|---------------|--------|
+| [`quickstart/`](examples/quickstart/) | Minimal setup — 1 case, 2 graders | `agent-eval-kit run --config examples/quickstart` |
+| [`text-grading/`](examples/text-grading/) | All text, safety, metric, composition, and LLM judge graders | `agent-eval-kit run --config examples/text-grading` |
+| [`tool-agent/`](examples/tool-agent/) | Tool call grading, hallucination detection, plugins | `agent-eval-kit run --config examples/tool-agent` |
+
+All examples require an `OPENROUTER_API_KEY`. See [`examples/README.md`](examples/README.md) for setup and details.
+
 ## Core Concepts
 
 | Term | Description |

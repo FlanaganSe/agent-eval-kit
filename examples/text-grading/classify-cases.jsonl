@@ -1,2 +1,3 @@
 {"id":"sentiment-positive","input":{"prompt":"Write a one-sentence product review for a pair of shoes you love."},"expected":{"metadata":{"classification":"positive"}}}
 {"id":"sentiment-negative","input":{"prompt":"Write a one-sentence product review for headphones that broke after one day."},"expected":{"metadata":{"classification":"negative"}}}
+{"id":"sentiment-neutral","input":{"prompt":"Write one sentence stating the material and available sizes of a plain white cotton t-shirt. Include only facts, no opinions."},"expected":{"metadata":{"classification":"neutral"}}}

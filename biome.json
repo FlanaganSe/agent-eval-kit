@@ -40,6 +40,7 @@
 			"src/**",
 			"vitest.config.ts",
 			"test/**",
+			"examples/**",
 			"!!**/dist",
 			"!!**/node_modules",
 			"!!**/.eval-fixtures",
