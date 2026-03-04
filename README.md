@@ -4,58 +4,36 @@
 [![tests](https://img.shields.io/badge/tests-676%20passed-brightgreen)](https://github.com/FlanaganSe/agent-eval-kit)
 [![license](https://img.shields.io/npm/l/agent-eval-kit)](LICENSE.md)
 
-TypeScript-native evaluation framework for AI agent workflows.
-
-Record agent responses, grade them with deterministic checks or LLM-as-judge rubrics, enforce quality gates in CI, and compare runs to catch regressions — all from a single config file.
-
-> **v0.0.7** — API is not yet stable.
+> TypeScript-native eval framework for AI agent workflows. Record once, replay forever, grade instantly.
 
 **[Documentation](https://flanaganse.github.io/agent-eval-kit/)** · **[GitHub](https://github.com/FlanaganSe/agent-eval-kit)**
 
 ---
 
-## Why agent-eval-kit?
+Testing AI agents is expensive, slow, and non-deterministic. agent-eval-kit fixes this with a **record-replay** workflow:
 
-Testing AI agents is different from testing deterministic code. Outputs vary between runs, quality is subjective, and running live LLM calls in CI is slow and expensive.
-
-agent-eval-kit solves this with a **record-replay** workflow:
-
-1. **Record** — capture live agent responses as fixtures
-2. **Replay** — grade recorded outputs instantly, zero API cost
+1. **Record** — capture live agent responses as fixtures (one-time API cost)
+2. **Replay** — grade recorded outputs instantly at zero cost
 3. **Gate** — enforce pass rates, cost budgets, and latency limits in CI
-4. **Compare** — diff two runs to find regressions and improvements
-
-## Install
-
-```bash
-npm install agent-eval-kit
-# or
-pnpm add agent-eval-kit
-```
-
-Requires **Node.js 20+**.
+4. **Compare** — diff two runs to catch regressions
 
 ## Quick Start
 
-### 1. Create a config
-
 ```bash
-agent-eval-kit init
+npm install agent-eval-kit
 ```
 
-Or write one manually:
+Requires **Node.js 20+**. Generate a starter config with `agent-eval-kit init`, or write one manually:
 
 ```typescript
 // eval.config.ts
-import { defineConfig } from "agent-eval-kit";
-import { contains, latency } from "agent-eval-kit";
+import { defineConfig, contains, latency } from "agent-eval-kit";
 
 export default defineConfig({
   suites: [
     {
       name: "basic-qa",
       target: async (input) => {
-        // Call your agent/LLM here
         const response = await myAgent(input.prompt);
         return { text: response.text, latencyMs: response.duration };
       },
@@ -76,238 +54,52 @@ export default defineConfig({
 });
 ```
 
-### 2. Record fixtures
-
 ```bash
-agent-eval-kit record --suite basic-qa
+agent-eval-kit record --suite basic-qa   # record fixtures (live API calls)
+agent-eval-kit run --mode replay         # replay instantly (after generation), $0 cost
 ```
 
-### 3. Run evals in replay mode
+## Features
 
-```bash
-agent-eval-kit run --mode replay
-```
-
-### 4. Compare runs
-
-```bash
-agent-eval-kit compare --base <run-id> --compare <run-id>
-```
+- **20 built-in graders** — text (`contains`, `regex`, `exactMatch`), tool calls (`toolSequence`, `toolArgsMatch`), metrics (`latency`, `cost`, `tokenCount`), safety (`safetyKeywords`, `noHallucinatedNumbers`), structured output (`jsonSchema`), and LLM-as-judge (`llmRubric`, `factuality`, `llmClassify`)
+- **Grader composition** — combine with `all()`, `any()`, `not()`
+- **3 execution modes** — `live` (real calls), `replay` (cached fixtures), `judge-only` (re-grade with new graders, no re-run)
+- **Quality gates** — enforce pass rate, max cost, and p95 latency thresholds; non-zero exit on failure
+- **Run comparison** — diff any two runs to surface regressions and improvements
+- **Multi-trial runs** — flakiness detection with Wilson score confidence intervals
+- **Watch mode** — re-run evals on file changes (`--watch`)
+- **External cases** — load from JSONL or YAML files alongside inline cases
+- **Plugin system** — custom graders and lifecycle hooks (`beforeRun`, `afterTrial`, `afterRun`)
+- **4 reporters** — console, JSON, JUnit XML, Markdown
+- **MCP server** — 8 tools + 3 resources for AI assistant integration
+- **CI-native** — JUnit reporter, GitHub Actions Step Summary, git hook installation
 
 ## Examples
-
-Working examples in [`examples/`](examples/) show every feature in action:
 
 | Example | What it covers | Run it |
 |---------|---------------|--------|
 | [`quickstart/`](examples/quickstart/) | Minimal setup — 1 case, 2 graders | `agent-eval-kit run --config examples/quickstart` |
-| [`text-grading/`](examples/text-grading/) | All text, safety, metric, composition, and LLM judge graders | `agent-eval-kit run --config examples/text-grading` |
+| [`text-grading/`](examples/text-grading/) | Text, safety, metric, composition, and LLM judge graders | `agent-eval-kit run --config examples/text-grading` |
 | [`tool-agent/`](examples/tool-agent/) | Tool call grading, hallucination detection, plugins | `agent-eval-kit run --config examples/tool-agent` |
 
-All examples require an `OPENROUTER_API_KEY`. See [`examples/README.md`](examples/README.md) for setup and details.
+See [`examples/README.md`](examples/README.md) for setup details.
 
-## Core Concepts
+## Documentation
 
-| Term | Description |
-|------|-------------|
-| **Suite** | A collection of cases sharing a target function, default graders, and gates |
-| **Case** | A single input/expected pair — inline or loaded from JSONL/YAML files |
-| **Grader** | A scoring function that returns `{ pass, score, reason }` |
-| **Trial** | One execution of a case (run N trials for flakiness detection) |
-| **Run** | The complete result of executing a suite — persisted for comparison |
-| **Fixture** | A recorded `TargetOutput` used for deterministic replay |
-| **Gate** | Suite-level pass/fail thresholds (pass rate, cost, latency) |
+Full docs at **[flanaganse.github.io/agent-eval-kit](https://flanaganse.github.io/agent-eval-kit/)**:
 
-## Built-in Graders
-
-### Text
-
-| Grader | Description |
-|--------|-------------|
-| `contains(substring)` | Case-insensitive substring match |
-| `notContains(substring)` | Substring must not appear |
-| `exactMatch(expected)` | Exact string equality (with trim/case options) |
-| `regex(pattern)` | Regex pattern match |
-
-### Tool Calls
-
-| Grader | Description |
-|--------|-------------|
-| `toolCalled(name)` | Tool was invoked |
-| `toolNotCalled(name)` | Tool was not invoked |
-| `toolSequence(tools, mode)` | Tools called in expected order (`strict`, `subset`, `superset`, `unordered`) |
-| `toolArgsMatch(name, args, mode)` | Tool arguments match expected values (`exact`, `subset`, `contains`) |
-
-### Metrics
-
-| Grader | Description |
-|--------|-------------|
-| `latency(maxMs)` | Response time within limit |
-| `cost(maxDollars)` | Cost within budget |
-| `tokenCount(maxTokens)` | Token usage within limit |
-
-### Safety
-
-| Grader | Description |
-|--------|-------------|
-| `safetyKeywords(prohibited)` | Output contains none of the prohibited words |
-| `noHallucinatedNumbers()` | Numbers in output are grounded in tool results |
-
-### Structured Output
-
-| Grader | Description |
-|--------|-------------|
-| `jsonSchema(zodSchema)` | Output parses as JSON and validates against a Zod schema |
-
-### LLM-as-Judge
-
-| Grader | Description |
-|--------|-------------|
-| `llmRubric(criteria)` | Score against natural language criteria (1–4 scale) |
-| `factuality()` | Check factual consistency against `expected.text` |
-| `llmClassify(categories)` | Classify output into categories with expected match |
-
-### Composition
-
-Combine any graders with `all()`, `any()`, and `not()`:
-
-```typescript
-import { all, any, not, contains, toolCalled } from "agent-eval-kit";
-
-const graders = [
-  { grader: all(contains("result"), toolCalled("search")), required: true },
-  { grader: not(contains("I don't know")) },
-];
-```
-
-## CLI
-
-```
-agent-eval-kit run              Run eval suites (live, replay, or judge-only)
-agent-eval-kit record           Record live agent responses as fixtures
-agent-eval-kit compare          Diff two runs to find regressions
-agent-eval-kit list             List previous runs
-agent-eval-kit cache            Manage judge cache (stats, clear)
-agent-eval-kit doctor           Validate project setup
-agent-eval-kit init             Interactive setup wizard
-agent-eval-kit install-hooks    Set up git hooks to run evals on commit
-agent-eval-kit mcp              Start MCP server for AI assistant integration
-```
-
-Common flags: `--suite <name>`, `--mode <live|replay|judge-only>`, `--concurrency <n>`, `--trials <n>`
-
-## Execution Modes
-
-| Mode | What it does | Cost | Speed |
-|------|-------------|------|-------|
-| `live` | Calls your target function (real LLM calls) | Full | Slow |
-| `replay` | Uses recorded fixtures | Zero | Instant |
-| `judge-only` | Re-grades an existing run with different graders | Judge calls only | Fast |
-
-## CI Integration
-
-Add evals to your CI pipeline using gates:
-
-```typescript
-// eval.config.ts
-{
-  suites: [{
-    // ...
-    gates: {
-      passRate: 0.95,        // 95% of cases must pass
-      maxCost: 2.0,          // $2 budget per run
-      p95LatencyMs: 5000,    // 5s p95 latency
-    },
-  }],
-}
-```
-
-```yaml
-# .github/workflows/evals.yml
-- run: agent-eval-kit run --mode replay --suite my-suite
-```
-
-The CLI exits with a non-zero code when gates fail.
-
-## MCP Server
-
-agent-eval-kit includes an MCP server so AI assistants (Claude, etc.) can run evals, inspect results, and compare runs directly.
-
-```bash
-agent-eval-kit mcp
-```
-
-**8 tools**: `run-suite`, `list-runs`, `list-suites`, `list-graders`, `describe-config`, `validate-config`, `get-run-details`, `compare-runs`
-
-**3 resources**: config schema, case schema, grader reference
-
-See the [MCP guide](https://flanaganse.github.io/agent-eval-kit/advanced/mcp-server/) for setup instructions.
-
-## Programmatic API
-
-```typescript
-import { loadConfig, runSuite } from "agent-eval-kit";
-
-const { suites } = await loadConfig({ cwd: process.cwd() });
-const run = await runSuite(suites[0], { mode: "replay" });
-
-console.log(run.summary.passRate); // 0.95
-```
-
-Key exports from `agent-eval-kit`:
-
-- `defineConfig()` — type-safe config helper
-- `loadConfig()` — load and validate `eval.config.ts`
-- `runSuite()` — execute a suite
-- `compareRuns()` — diff two runs
-- `saveRun()` / `loadRun()` / `listRuns()` — run persistence
-
-Key exports from `agent-eval-kit/graders`:
-
-- All 20 built-in graders listed above
-- `all()`, `any()`, `not()` — composition operators
-- `computeCaseResult()` — aggregate grader scores
-
-Additional subpath exports: `agent-eval-kit/comparison`, `agent-eval-kit/reporters`, `agent-eval-kit/fixtures`, `agent-eval-kit/plugin`, `agent-eval-kit/watcher`
-
-## Reporters
-
-Four built-in output formats:
-
-- **console** — colored terminal output (default)
-- **json** — structured JSON
-- **markdown** — markdown summary
-- **junit** — JUnit XML for CI systems
-
-## Plugins
-
-Extend agent-eval-kit with custom graders and lifecycle hooks:
-
-```typescript
-import type { EvalPlugin } from "agent-eval-kit/plugin";
-
-const myPlugin: EvalPlugin = {
-  name: "my-plugin",
-  graders: {
-    "my-org/tone": myToneGrader,
-  },
-  hooks: {
-    afterRun: async (context) => {
-      // Post results to Slack, Datadog, etc.
-    },
-  },
-};
-```
+- [Quick Start](https://flanaganse.github.io/agent-eval-kit/getting-started/quick-start/) — first eval in 5 minutes
+- [Graders Guide](https://flanaganse.github.io/agent-eval-kit/guides/graders/) — all graders with examples
+- [CLI Reference](https://flanaganse.github.io/agent-eval-kit/reference/cli/) — every command and flag
+- [Config Reference](https://flanaganse.github.io/agent-eval-kit/reference/config/) — full config schema
+- [Programmatic API](https://flanaganse.github.io/agent-eval-kit/reference/programmatic-api/) — use as a library
 
 ## Contributing
 
-Contributions are welcome. Please open an issue first to discuss what you'd like to change.
+Contributions welcome — please [open an issue](https://github.com/FlanaganSe/agent-eval-kit/issues) first to discuss changes.
 
 ```bash
-pnpm install
-pnpm test        # run tests
-pnpm lint        # lint with Biome
-pnpm typecheck   # type-check with tsc
+pnpm install && pnpm test && pnpm lint
 ```
 
 ## License
