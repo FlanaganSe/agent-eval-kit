@@ -15,6 +15,11 @@ export default defineConfig({
 					label: "GitHub",
 					href: "https://github.com/FlanaganSe/agent-eval-kit",
 				},
+				{
+					icon: "npm",
+					label: "npm",
+					href: "https://www.npmjs.com/package/agent-eval-kit",
+				},
 			],
 			sidebar: [
 				{
