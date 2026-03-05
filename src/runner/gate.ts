@@ -3,11 +3,28 @@ import type { GateCheckResult, GateConfig, GateResult, RunSummary } from "../con
 /**
  * Evaluates suite-level gates against the run summary.
  * Returns pass/fail per gate plus an overall result.
+ *
+ * Aborted runs always fail — pass rates computed on partial data are meaningless.
  */
 export function evaluateGates(
 	summary: Omit<RunSummary, "gateResult">,
 	gates: GateConfig | undefined,
 ): GateResult {
+	if (summary.aborted) {
+		return {
+			pass: false,
+			results: [
+				{
+					gate: "aborted",
+					pass: false,
+					actual: summary.totalCases,
+					threshold: 0,
+					reason: "Run was aborted — gates cannot be evaluated on partial results",
+				},
+			],
+		};
+	}
+
 	if (!gates) {
 		return { pass: true, results: [] };
 	}

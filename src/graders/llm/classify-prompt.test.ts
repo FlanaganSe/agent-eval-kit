@@ -60,7 +60,7 @@ describe("buildClassificationPrompt", () => {
 		expect(system.content).toContain("Do not prefer longer outputs");
 	});
 
-	it("falls back to toolCalls when no text", () => {
+	it("includes toolCalls when no text", () => {
 		const messages = buildClassificationPrompt({
 			output: {
 				latencyMs: 100,
@@ -70,6 +70,30 @@ describe("buildClassificationPrompt", () => {
 		});
 		const user = messages.find((m) => m.role === "user");
 		expect(user?.content).toContain("search");
+	});
+
+	it("includes both text and toolCalls when both present", () => {
+		const messages = buildClassificationPrompt({
+			output: {
+				text: "Found 3 results",
+				latencyMs: 100,
+				toolCalls: [{ name: "search", args: { query: "test" }, result: { count: 3 } }],
+			},
+			categories,
+		});
+		const user = messages.find((m) => m.role === "user");
+		expect(user?.content).toContain("Found 3 results");
+		expect(user?.content).toContain("search");
+		expect(user?.content).toContain("Tool calls:");
+	});
+
+	it("shows empty output placeholder when neither text nor toolCalls", () => {
+		const messages = buildClassificationPrompt({
+			output: { latencyMs: 100 },
+			categories,
+		});
+		const user = messages.find((m) => m.role === "user");
+		expect(user?.content).toContain("(empty output)");
 	});
 
 	it("returns exactly 2 messages (system + user)", () => {

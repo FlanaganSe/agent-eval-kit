@@ -7,6 +7,18 @@ import { createLogger } from "../logger.js";
 import { resolveFixtureDir } from "../resolve-fixture-dir.js";
 import { globalArgs } from "../shared-args.js";
 
+/**
+ * Prompts for confirmation in TTY, requires --yes in non-TTY (CI).
+ * Returns true if the action should proceed.
+ */
+async function requireConfirmation(message: string, yes: boolean): Promise<boolean> {
+	if (yes) return true;
+	if (process.stdout.isTTY) {
+		return (await confirm({ message })) === true;
+	}
+	throw new Error("Destructive operation requires --yes flag in non-interactive environments.");
+}
+
 // biome-ignore lint/style/noDefaultExport: citty subcommands require default exports
 export default defineCommand({
 	meta: { name: "clear", description: "Clear fixture or judge cache" },
@@ -47,14 +59,9 @@ export default defineCommand({
 
 		// --all: confirm BEFORE deleting anything (judge + fixtures are atomic)
 		if (args.all) {
-			if (!args.yes && process.stdout.isTTY) {
-				const shouldClear = await confirm({
-					message: "Delete all caches (judge cache + fixtures)?",
-				});
-				if (shouldClear !== true) {
-					logger.info("Cancelled.");
-					return;
-				}
+			if (!(await requireConfirmation("Delete all caches (judge cache + fixtures)?", args.yes))) {
+				logger.info("Cancelled.");
+				return;
 			}
 
 			const judgeCount = await clearJudgeCache();
@@ -83,15 +90,13 @@ export default defineCommand({
 					: `No fixtures found for suite '${args.suite}'.`,
 			);
 		} else {
-			// Clearing ALL fixtures — require confirmation unless --yes or already confirmed via --all
-			if (!args.all && !args.yes && process.stdout.isTTY) {
-				const shouldClear = await confirm({
-					message: `Delete all fixtures in ${fixtureDir}?`,
-				});
-				if (shouldClear !== true) {
-					logger.info("Cancelled.");
-					return;
-				}
+			// Clearing ALL fixtures — require confirmation unless already confirmed via --all
+			if (
+				!args.all &&
+				!(await requireConfirmation(`Delete all fixtures in ${fixtureDir}?`, args.yes))
+			) {
+				logger.info("Cancelled.");
+				return;
 			}
 
 			const entries = await readdir(fixtureDir);

@@ -148,6 +148,18 @@ describe("formatConsoleReport", () => {
 		expect(output).toContain("CI:");
 	});
 
+	it("handles empty trialStats without producing -Infinity", () => {
+		const run = makeRun({
+			summary: {
+				...makeRun().summary,
+				trialStats: {},
+			},
+		});
+		const output = formatConsoleReport(run, { color: false });
+		expect(output).not.toContain("-Infinity");
+		expect(output).toContain("Suite: smoke (live)");
+	});
+
 	it("shows aborted warning", () => {
 		const run = makeRun({
 			summary: { ...makeRun().summary, aborted: true },
@@ -221,6 +233,42 @@ describe("formatConsoleReport", () => {
 		expect(output).toContain("...");
 		// Should not contain the full 300-char string
 		expect(output).not.toContain(longReasoning);
+	});
+
+	it("does not double-print grader reason in verbose mode for failing LLM grades", () => {
+		const run = makeRun({
+			trials: [
+				{
+					caseId: "J01",
+					status: "fail",
+					output: { latencyMs: 100, cost: 0.001 },
+					grades: [
+						{
+							pass: false,
+							score: 0.25,
+							reason: "Score 1/4: Poor response",
+							graderName: "llm-rubric",
+							metadata: { reasoning: "The output is not relevant." },
+						},
+					],
+					score: 0.25,
+					durationMs: 100,
+				},
+			],
+			summary: {
+				...makeRun().summary,
+				totalCases: 1,
+				passed: 0,
+				failed: 1,
+			},
+		});
+		const output = formatConsoleReport(run, { color: false, verbose: true });
+		// The grader reason should appear only once (from failure block), not twice
+		const matches = output.match(/Score 1\/4: Poor response/g) ?? [];
+		expect(matches.length).toBe(1);
+		// But reasoning should still appear
+		expect(output).toContain("Reasoning:");
+		expect(output).toContain("not relevant");
 	});
 
 	it("does not show reasoning without verbose flag", () => {

@@ -79,7 +79,7 @@ export default defineConfig({
 | `description` | `string` | — | Human-readable description |
 | `target` | `(input: CaseInput) => Promise<TargetOutput>` | (required) | Function that calls your agent/API |
 | `cases` | `Case[] \| string \| (Case \| string)[]` | (required) | Inline cases, file path(s), or a mix |
-| `defaultGraders` | `GraderConfig[]` | `[]` | Graders applied to all cases (unless a case defines its own) |
+| `defaultGraders` | `GraderConfig[]` | `[]` | Graders applied to all cases in this suite |
 | `gates` | `GateConfig` | — | Quality thresholds |
 | `concurrency` | `number` | — | Max parallel case executions |
 | `targetVersion` | `string` | — | Version identifier for fixture invalidation |

@@ -121,11 +121,7 @@ The framework has **locked terminology** — these exact terms are used consiste
 
 **`CaseInput`**: `messages` (chat history), optional `systemPrompt`, optional `tools` (definitions), optional `metadata`.
 
-**`TargetOutput`**: `text` (response), optional `toolCalls` (name + args + result), optional `tokenUsage`, optional `latencyMs`, optional `cost`, optional `raw` (provider payload — can be stripped at fixture write time), optional `metadata`.
-
-### Critical rule: case graders replace, not merge
-
-When a case specifies its own `graders`, the suite's `defaultGraders` are completely ignored for that case. The pipeline checks `caseGraders && caseGraders.length > 0 ? caseGraders : (suiteGraders ?? [])` — there is no merging. This makes each case self-contained and predictable; a case author always knows exactly which graders will run.
+**`TargetOutput`**: `text` (response), optional `toolCalls` (name + args + result), optional `tokenUsage`, required `latencyMs`, optional `cost`, optional `raw` (provider payload — can be stripped at fixture write time), optional `metadata`.
 
 ### Run modes
 

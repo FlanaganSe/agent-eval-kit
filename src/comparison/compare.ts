@@ -181,7 +181,9 @@ function compareSingleCase(
 		} else if (baseTrial.status !== "pass" && compareTrial.status === "pass") {
 			direction = "improvement";
 		} else {
-			direction = classifyScoreDelta(scoreDelta, threshold);
+			// Non-pass → different non-pass (e.g. fail→error or error→fail).
+			// A change in failure mode is always significant — treat as regression.
+			direction = "regression";
 		}
 	} else {
 		direction = classifyScoreDelta(scoreDelta, threshold);

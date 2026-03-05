@@ -4,7 +4,6 @@ export interface ClassificationPromptInput {
 	readonly output: TargetOutput;
 	readonly categories: Readonly<Record<string, string>>;
 	readonly criteria?: string | undefined;
-	readonly expected?: string | undefined;
 }
 
 export function buildClassificationPrompt(
@@ -38,10 +37,27 @@ export function buildClassificationPrompt(
 
 	const systemPrompt = parts.join("\n");
 
+	const outputParts: string[] = [];
+	if (input.output.text) {
+		outputParts.push(input.output.text);
+	}
+	if (input.output.toolCalls && input.output.toolCalls.length > 0) {
+		outputParts.push("\nTool calls:");
+		for (const call of input.output.toolCalls) {
+			outputParts.push(`  - ${call.name}(${JSON.stringify(call.args ?? {})})`);
+			if (call.result !== undefined) {
+				outputParts.push(`    → ${JSON.stringify(call.result)}`);
+			}
+		}
+	}
+	if (outputParts.length === 0) {
+		outputParts.push("(empty output)");
+	}
+
 	const userContent = [
 		"## Output to Classify",
 		"<output>",
-		input.output.text ?? JSON.stringify(input.output.toolCalls ?? []),
+		outputParts.join("\n"),
 		"</output>",
 	].join("\n");
 

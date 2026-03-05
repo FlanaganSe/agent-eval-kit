@@ -355,6 +355,42 @@ export default {
 		expect(config.fixtureDir).toBe(join(tempDir, "data/fixtures"));
 	});
 
+	it("rejects duplicate suite names", async () => {
+		const configContent = `
+export default {
+	suites: [
+		{
+			name: "smoke",
+			target: async () => ({ text: "ok", latencyMs: 0 }),
+			cases: [{ id: "H01", input: {} }],
+		},
+		{
+			name: "smoke",
+			target: async () => ({ text: "ok", latencyMs: 0 }),
+			cases: [{ id: "H02", input: {} }],
+		},
+	],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/duplicate suite name.*smoke/i);
+	});
+
+	it("rejects unknown gate keys (catches typos)", async () => {
+		const configContent = `
+export default {
+	suites: [{
+		name: "smoke",
+		target: async () => ({ text: "ok", latencyMs: 0 }),
+		cases: [{ id: "H01", input: {} }],
+		gates: { passrate: 0.9 },
+	}],
+}
+`;
+		await writeFile(join(tempDir, "eval.config.ts"), configContent);
+		await expect(loadConfig({ cwd: tempDir })).rejects.toThrow(/unknown key.*passrate/i);
+	});
+
 	it("accepts valid numeric config values", async () => {
 		const configContent = `
 export default {

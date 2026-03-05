@@ -17,9 +17,9 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 	const useColor = options?.color !== false;
 	const c = useColor ? pc : noColor;
 	const lines: string[] = [];
-	const trialCount = run.summary.trialStats
-		? Math.max(...Object.values(run.summary.trialStats).map((s) => s.trialCount))
-		: undefined;
+	const trialStatValues = run.summary.trialStats ? Object.values(run.summary.trialStats) : [];
+	const trialCount =
+		trialStatValues.length > 0 ? Math.max(...trialStatValues.map((s) => s.trialCount)) : undefined;
 	const modeLabel = trialCount ? `${run.mode}, ${trialCount} trials` : run.mode;
 
 	lines.push(`Suite: ${c.bold(run.suiteId)} (${modeLabel})`);
@@ -40,13 +40,15 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 		}
 
 		// Show failure reason for failing cases
-		if (
+		const isFailingCase =
 			firstTrial.status === "fail" ||
-			(trialStats && !trialStats.flaky && trialStats.passCount === 0)
-		) {
+			(trialStats && !trialStats.flaky && trialStats.passCount === 0);
+		const printedGraders = new Set<string>();
+		if (isFailingCase) {
 			const failedGrades = firstTrial.grades.filter((g) => !g.pass);
 			for (const grade of failedGrades) {
 				lines.push(`       ${c.dim(`→ ${grade.graderName}: ${grade.reason}`)}`);
+				printedGraders.add(grade.graderName);
 			}
 		}
 
@@ -55,7 +57,10 @@ export function formatConsoleReport(run: Run, options?: ConsoleReportOptions): s
 			for (const grade of firstTrial.grades) {
 				const reasoning = grade.metadata?.reasoning;
 				if (typeof reasoning === "string" && reasoning.length > 0) {
-					lines.push(`       ${c.dim(`→ ${grade.graderName}: ${grade.reason}`)}`);
+					// Skip the reason line if already printed in the failure block
+					if (!printedGraders.has(grade.graderName)) {
+						lines.push(`       ${c.dim(`→ ${grade.graderName}: ${grade.reason}`)}`);
+					}
 					const truncated = reasoning.slice(0, 200);
 					const display = reasoning.length > 200 ? `${truncated}...` : truncated;
 					lines.push(`         ${c.dim(`Reasoning: ${display}`)}`);

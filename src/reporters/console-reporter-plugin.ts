@@ -6,7 +6,7 @@ export const consoleReporterPlugin: ReporterPlugin = {
 	name: "console",
 	report: async (run, options) => {
 		const report = formatConsoleReport(run, {
-			color: options.color,
+			color: options.color ?? (options.output ? false : undefined),
 			verbose: options.verbose,
 		});
 		if (options.output) {

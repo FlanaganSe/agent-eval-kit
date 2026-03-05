@@ -20,13 +20,12 @@ describe("assertSafeFixtureDir", () => {
 		expect(() => assertSafeFixtureDir("..", cwd)).toThrow(/resolves outside/);
 	});
 
-	it("rejects '.'", () => {
-		// "." resolves to cwd itself — which equals root, not a subdirectory.
-		// This is allowed because it's not outside the project root, but it would
-		// mean "delete the entire project dir" which is the root itself.
-		// The check allows resolved === root, so "." passes. That's acceptable
-		// because the fixture dir IS the project root (unusual but not an escape).
-		expect(() => assertSafeFixtureDir(".", cwd)).not.toThrow();
+	it("rejects '.' (project root itself)", () => {
+		expect(() => assertSafeFixtureDir(".", cwd)).toThrow(/subdirectory/);
+	});
+
+	it("rejects empty string (resolves to project root)", () => {
+		expect(() => assertSafeFixtureDir("", cwd)).toThrow(/subdirectory/);
 	});
 
 	it("rejects absolute paths outside the project", () => {

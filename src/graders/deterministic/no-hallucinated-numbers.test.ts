@@ -127,6 +127,33 @@ describe("noHallucinatedNumbers", () => {
 		expect(result.pass).toBe(true);
 	});
 
+	it("score denominator excludes skipped numbers (years and small integers)", async () => {
+		const output: TargetOutput = {
+			text: "In 2024, there were 3 items worth $500",
+			toolCalls: [{ name: "calc", result: { value: 500 } }],
+			latencyMs: 0,
+		};
+		const result = await noHallucinatedNumbers()(output, undefined, ctx);
+		// 2024 is skipped (year), 3 is skipped (small int), only 500 is checked
+		// 500 is grounded → 1/1 = score 1.0
+		expect(result.pass).toBe(true);
+		expect(result.score).toBe(1);
+		expect(result.metadata?.checkedCount).toBe(1);
+	});
+
+	it("score denominator only counts checked numbers for partial scores", async () => {
+		const output: TargetOutput = {
+			text: "In 2024, revenue was $500 and profit was $999",
+			toolCalls: [{ name: "calc", result: { revenue: 500 } }],
+			latencyMs: 0,
+		};
+		const result = await noHallucinatedNumbers()(output, undefined, ctx);
+		// 2024 skipped (year), 500 grounded, 999 hallucinated → 1/2 = 0.5
+		expect(result.pass).toBe(false);
+		expect(result.score).toBe(0.5);
+		expect(result.metadata?.checkedCount).toBe(2);
+	});
+
 	it("computes partial score", async () => {
 		const output: TargetOutput = {
 			text: "Found 42 items costing $999",

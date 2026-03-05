@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { loadConfig } from "../config/loader.js";
 
 const DEFAULT_FIXTURE_DIR = ".eval-fixtures";
@@ -7,11 +7,18 @@ const DEFAULT_FIXTURE_DIR = ".eval-fixtures";
 /**
  * Validates that a fixture directory path stays within the project root.
  * Rejects absolute paths and parent-traversal that escape the working directory.
+ * Uses path.relative() for cross-platform support (POSIX + Windows).
  */
 export function assertSafeFixtureDir(fixtureDir: string, cwd: string): void {
 	const resolved = resolve(cwd, fixtureDir);
 	const root = resolve(cwd);
-	if (!resolved.startsWith(`${root}/`) && resolved !== root) {
+	if (resolved === root) {
+		throw new Error(
+			`fixtureDir "${fixtureDir}" resolves to the project root. It must be a subdirectory (e.g. ".eval-fixtures").`,
+		);
+	}
+	const rel = relative(root, resolved);
+	if (!rel || rel.startsWith("..") || isAbsolute(rel)) {
 		throw new Error(
 			`fixtureDir "${fixtureDir}" resolves outside the project root. It must be a relative path within the project.`,
 		);

@@ -5,6 +5,7 @@ import { RunModeSchema, RunSchema } from "../config/schema.js";
 import type { Run, RunMeta } from "../config/types.js";
 
 /** Lightweight schema for extracting metadata from run files without full validation. */
+/** Uses z.object() intentionally — extracts a subset of fields from full run files. */
 const RunFileMetaSchema = z.object({
 	id: z.string(),
 	suiteId: z.string(),

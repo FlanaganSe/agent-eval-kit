@@ -4,6 +4,19 @@ function hasJudge(graders: readonly GraderFn[]): boolean {
 	return graders.some((g) => "requiresJudge" in g && g.requiresJudge === true);
 }
 
+/** Sums judgeCost from child results to propagate cost through composition. */
+function aggregateJudgeCost(results: readonly GradeResult[]): number {
+	return results.reduce((sum, r) => {
+		const jc = r.metadata?.judgeCost;
+		return sum + (typeof jc === "number" ? jc : 0);
+	}, 0);
+}
+
+/** Builds metadata with aggregated judgeCost, only if non-zero. */
+function buildCostMetadata(totalJudgeCost: number): Record<string, unknown> | undefined {
+	return totalJudgeCost > 0 ? { judgeCost: totalJudgeCost } : undefined;
+}
+
 /**
  * Conjunction: all graders must pass.
  * Score = minimum score. Does NOT short-circuit (all results needed for reporting).
@@ -37,7 +50,13 @@ export function all(graders: readonly GraderFn[]): GraderFn {
 			? `All ${results.length} graders passed`
 			: failures.map((f) => `${f.graderName}: ${f.reason}`).join("; ");
 
-		return { pass: allPassed, score: minScore, reason, graderName };
+		return {
+			pass: allPassed,
+			score: minScore,
+			reason,
+			graderName,
+			metadata: buildCostMetadata(aggregateJudgeCost(results)),
+		};
 	};
 	if (hasJudge(graders)) return Object.assign(fn, { requiresJudge: true as const });
 	return fn;
@@ -71,6 +90,8 @@ export function any(graders: readonly GraderFn[]): GraderFn {
 		const maxScore = Math.max(...results.map((r) => r.score));
 		const graderName = `any(${collectedNames.join(", ")})`;
 
+		const metadata = buildCostMetadata(aggregateJudgeCost(results));
+
 		if (anyPassed) {
 			const bestPasser = results.filter((r) => r.pass).sort((a, b) => b.score - a.score)[0];
 			return {
@@ -78,11 +99,12 @@ export function any(graders: readonly GraderFn[]): GraderFn {
 				score: maxScore,
 				reason: bestPasser?.reason ?? "At least one grader passed",
 				graderName,
+				metadata,
 			};
 		}
 
 		const reason = results.map((f) => `${f.graderName}: ${f.reason}`).join("; ");
-		return { pass: false, score: maxScore, reason, graderName };
+		return { pass: false, score: maxScore, reason, graderName, metadata };
 	};
 	if (hasJudge(graders)) return Object.assign(fn, { requiresJudge: true as const });
 	return fn;
@@ -99,6 +121,7 @@ export function not(grader: GraderFn): GraderFn {
 			score: 1 - result.score,
 			reason: `NOT: ${result.reason}`,
 			graderName: `not(${result.graderName})`,
+			metadata: buildCostMetadata(aggregateJudgeCost([result])),
 		};
 	};
 	if ("requiresJudge" in grader && grader.requiresJudge === true) {

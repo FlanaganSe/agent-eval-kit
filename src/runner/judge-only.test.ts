@@ -222,6 +222,38 @@ describe("runJudgeOnly", () => {
 		expect(trials[1]?.trialIndex).toBe(1);
 	});
 
+	it("preserves error trials without re-grading", async () => {
+		const errorOutput: TargetOutput = {
+			text: "Target error: API unavailable",
+			latencyMs: 50,
+		};
+
+		const previousRun = makeRun([
+			{
+				caseId: "C01",
+				status: "error",
+				output: errorOutput,
+				grades: [],
+				score: 0,
+				durationMs: 50,
+			},
+		]);
+
+		const suite = makeSuite([alwaysPassGrader]);
+
+		const trials = await runJudgeOnly({
+			previousRun,
+			suiteConfig: suite,
+			runOptions: { mode: "judge-only", timeoutMs: 30_000 },
+		});
+
+		expect(trials).toHaveLength(1);
+		const trial = trials[0];
+		expect(trial.status).toBe("error");
+		expect(trial.output).toEqual(errorOutput);
+		expect(trial.score).toBe(0);
+	});
+
 	it("looks up expected from suite config cases", async () => {
 		const expectedTracker: string[] = [];
 		const trackingGrader: GraderConfig = {

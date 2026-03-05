@@ -95,8 +95,15 @@ function matchSequence(
 		}
 
 		case "subset": {
-			const actualSet = new Set(actual);
-			const missing = expected.filter((t) => !actualSet.has(t));
+			const actualCounts = buildCountMap(actual);
+			const expectedCounts = buildCountMap(expected);
+			const missing: string[] = [];
+			for (const [tool, needed] of expectedCounts) {
+				const have = actualCounts.get(tool) ?? 0;
+				if (have < needed) {
+					missing.push(needed > 1 ? `${tool} (need ${needed}, got ${have})` : tool);
+				}
+			}
 			if (missing.length > 0) {
 				return {
 					pass: false,
@@ -107,8 +114,15 @@ function matchSequence(
 		}
 
 		case "superset": {
-			const expectedSet = new Set(expected);
-			const extra = actual.filter((t) => !expectedSet.has(t));
+			const expectedCounts = buildCountMap(expected);
+			const actualCounts = buildCountMap(actual);
+			const extra: string[] = [];
+			for (const [tool, have] of actualCounts) {
+				const allowed = expectedCounts.get(tool) ?? 0;
+				if (have > allowed) {
+					extra.push(allowed > 0 ? `${tool} (allowed ${allowed}, got ${have})` : tool);
+				}
+			}
 			if (extra.length > 0) {
 				return {
 					pass: false,
@@ -118,4 +132,12 @@ function matchSequence(
 			return { pass: true, reason: "" };
 		}
 	}
+}
+
+function buildCountMap(items: readonly string[]): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const item of items) {
+		counts.set(item, (counts.get(item) ?? 0) + 1);
+	}
+	return counts;
 }

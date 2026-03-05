@@ -1,5 +1,3 @@
-export const VERSION = "0.0.7";
-
 // Comparison
 export { type CompareOptions, compareRuns } from "./comparison/compare.js";
 export { type ComparisonFormatOptions, formatComparisonReport } from "./comparison/format.js";
@@ -158,6 +156,7 @@ export { generateRunId, runSuite } from "./runner/runner.js";
 export { computeAllTrialStats, computeTrialStats, wilsonInterval } from "./runner/statistics.js";
 // Storage
 export { listRuns, loadRun, saveRun } from "./storage/run-store.js";
+export { VERSION } from "./version.js";
 export type { FileWatcher, FileWatcherOptions } from "./watcher/file-watcher.js";
 // Watcher
 export { createFileWatcher } from "./watcher/file-watcher.js";

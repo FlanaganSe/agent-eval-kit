@@ -11,8 +11,8 @@ import type {
 	Trial,
 } from "../config/types.js";
 import { readFixture, writeFixture } from "../fixtures/fixture-store.js";
-import { VERSION } from "../index.js";
 import { createHookDispatcher } from "../plugin/hooks.js";
+import { VERSION } from "../version.js";
 import { evaluateGates } from "./gate.js";
 import { runJudgeOnly } from "./judge-only.js";
 import { runGraderPipeline } from "./pipeline.js";
@@ -50,6 +50,13 @@ interface TrialWorkItem {
 export async function runSuite(suite: ResolvedSuite, options: RunOptions): Promise<Run> {
 	if (options.mode === "judge-only") {
 		return runSuiteJudgeOnly(suite, options);
+	}
+
+	if (options.mode === "replay" && (!options.fixtureOptions || !options.configHash)) {
+		throw new Error(
+			'mode "replay" requires fixtureOptions and configHash. ' +
+				"Run with --mode=live --record to create fixtures first.",
+		);
 	}
 
 	const dispatcher = createHookDispatcher(options.plugins ?? [], {
@@ -154,13 +161,33 @@ async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Pro
 		throw new Error("--mode=judge-only requires --run-id=<id> to specify a previous run.");
 	}
 
+	const dispatcher = createHookDispatcher(options.plugins ?? [], {
+		warn: (msg) => process.stderr.write(`${msg}\n`),
+	});
 	const runId = generateRunId();
 	const startTime = Date.now();
+	const totalTrialCount = options.previousRun.trials.length;
+	let completedCount = 0;
+
+	await dispatcher.beforeRun({
+		suiteId: suite.name,
+		mode: "judge-only",
+		caseCount: suite.cases.length,
+		trialCount: totalTrialCount,
+	});
 
 	const trials = await runJudgeOnly({
 		previousRun: options.previousRun,
 		suiteConfig: suite,
 		runOptions: options,
+		onTrial: async (trial) => {
+			completedCount++;
+			await dispatcher.afterTrial(trial, {
+				suiteId: suite.name,
+				completedCount,
+				totalCount: totalTrialCount,
+			});
+		},
 	});
 
 	// Sort trials deterministically
@@ -171,7 +198,9 @@ async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Pro
 	});
 
 	const totalDurationMs = Date.now() - startTime;
-	const trialStats = computeAllTrialStats(sortedTrials, options.trials);
+	// Let trial stats be inferred from trialIndex markers in the data,
+	// not the current --trials flag (which belongs to the new run, not the previous one)
+	const trialStats = computeAllTrialStats(sortedTrials, undefined);
 	const partialSummary = computePartialSummary(
 		sortedTrials,
 		suite.cases,
@@ -183,7 +212,7 @@ async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Pro
 
 	const summary: RunSummary = { ...partialSummary, gateResult };
 
-	return {
+	const run: Run = {
 		schemaVersion: SCHEMA_VERSION,
 		id: runId,
 		suiteId: suite.name,
@@ -194,6 +223,10 @@ async function runSuiteJudgeOnly(suite: ResolvedSuite, options: RunOptions): Pro
 		configHash: computeConfigHash(suite),
 		frameworkVersion: VERSION,
 	};
+
+	await dispatcher.afterRun(run);
+
+	return run;
 }
 
 function expandTrials(cases: readonly Case[], trialCount: number): readonly TrialWorkItem[] {

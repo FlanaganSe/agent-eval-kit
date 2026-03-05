@@ -14,6 +14,22 @@ const baseSummary: Omit<RunSummary, "gateResult"> = {
 };
 
 describe("evaluateGates", () => {
+	it("fails when run was aborted, even with no gates", () => {
+		const abortedSummary = { ...baseSummary, aborted: true };
+		const result = evaluateGates(abortedSummary, undefined);
+		expect(result.pass).toBe(false);
+		expect(result.results).toHaveLength(1);
+		expect(result.results[0]?.gate).toBe("aborted");
+		expect(result.results[0]?.reason).toMatch(/aborted/i);
+	});
+
+	it("fails when run was aborted, even if all gates would pass", () => {
+		const abortedSummary = { ...baseSummary, aborted: true };
+		const result = evaluateGates(abortedSummary, { passRate: 0.5 });
+		expect(result.pass).toBe(false);
+		expect(result.results[0]?.gate).toBe("aborted");
+	});
+
 	it("passes with no gates configured", () => {
 		const result = evaluateGates(baseSummary, undefined);
 		expect(result.pass).toBe(true);

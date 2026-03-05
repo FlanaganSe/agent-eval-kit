@@ -127,13 +127,14 @@ Displays suites, fixture counts, disk size, age, and judge cache entries.
 
 #### `cache clear`
 
-Clear fixture or judge cache.
+Clear fixture or judge cache. In non-interactive environments (CI), the `--yes` flag is required for destructive operations.
 
 ```bash
-agent-eval-kit cache clear              # Clear fixture cache
+agent-eval-kit cache clear              # Clear fixture cache (prompts in TTY)
 agent-eval-kit cache clear --judge      # Clear judge cache only
 agent-eval-kit cache clear --all        # Clear all caches
 agent-eval-kit cache clear --suite=foo  # Clear fixtures for specific suite
+agent-eval-kit cache clear --yes        # Skip confirmation (required in CI)
 ```
 
 ### `doctor`

@@ -77,7 +77,13 @@ export function formatMarkdownReport(run: Run): string {
 }
 
 function escapeCell(value: string): string {
-	return value.replace(/[\n\r]+/g, " ").replace(/\|/g, "\\|");
+	return value
+		.replace(/[\n\r]+/g, " ")
+		.replace(/\|/g, "\\|")
+		.replace(/`/g, "\\`")
+		.replace(/[*_]/g, "\\$&")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
 }
 
 /** Built-in Markdown reporter plugin. Produces a detailed per-case report with grader breakdowns. Writes to `options.output` if set, otherwise returns the markdown string. */

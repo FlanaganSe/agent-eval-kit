@@ -67,7 +67,7 @@ export default defineCommand({
 			const rate = (run.passRate * 100).toFixed(1);
 			const rateStr = formatPassRate(rate, args["no-color"]);
 			const date = new Date(run.timestamp).toLocaleString();
-			process.stdout.write(`${id}  ${suite}  ${mode}  ${rateStr.padEnd(12)}  ${date}\n`);
+			process.stdout.write(`${id}  ${suite}  ${mode}  ${rateStr}  ${date}\n`);
 		}
 
 		if (filtered.length > limit) {
@@ -85,7 +85,7 @@ async function resolveProjectDir(configArg?: string): Promise<string> {
 }
 
 function formatPassRate(rate: string, noColor?: boolean): string {
-	const label = `${rate}%`;
+	const label = `${rate}%`.padEnd(12);
 	if (noColor) return label;
 	const n = Number.parseFloat(rate);
 	if (n >= 90) return pc.green(label);

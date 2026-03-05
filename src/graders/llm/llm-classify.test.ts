@@ -116,6 +116,62 @@ describe("llmClassify", () => {
 		expect(calls).toHaveLength(1);
 	});
 
+	it("handles judge call failure gracefully", async () => {
+		const judge: JudgeCallFn = async () => {
+			throw new Error("rate limit exceeded");
+		};
+		const grader = llmClassify({ categories, judge });
+		const result = await grader({ text: "test", latencyMs: 100 }, undefined, baseContext);
+		expect(result.pass).toBe(false);
+		expect(result.score).toBe(0);
+		expect(result.reason).toContain("Judge call failed");
+		expect(result.reason).toContain("rate limit exceeded");
+	});
+
+	it("handles non-string classification in expected metadata", async () => {
+		const { judge } = createMockJudge(
+			'{"classification":"helpful","reasoning":"Good","confidence":0.9}',
+		);
+		const grader = llmClassify({ categories, judge });
+		const result = await grader(
+			{ text: "test", latencyMs: 100 },
+			{ metadata: { classification: 42 } },
+			baseContext,
+		);
+		// Non-string classification treated as no expected (classification-only mode)
+		expect(result.pass).toBe(true);
+	});
+
+	it("matches expected classification case-insensitively", async () => {
+		const { judge } = createMockJudge(
+			'{"classification":"helpful","reasoning":"Addresses the question","confidence":0.95}',
+		);
+		const grader = llmClassify({ categories, judge });
+		const result = await grader(
+			{ text: "The answer is Paris", latencyMs: 100 },
+			{ metadata: { classification: "Helpful" } }, // uppercase H
+			baseContext,
+		);
+		expect(result.pass).toBe(true);
+		expect(result.score).toBe(1);
+	});
+
+	it("returns error for invalid expected classification category", async () => {
+		const { judge } = createMockJudge(
+			'{"classification":"helpful","reasoning":"Good","confidence":0.9}',
+		);
+		const grader = llmClassify({ categories, judge });
+		const result = await grader(
+			{ text: "test", latencyMs: 100 },
+			{ metadata: { classification: "helpfull" } }, // typo
+			baseContext,
+		);
+		expect(result.pass).toBe(false);
+		expect(result.score).toBe(0);
+		expect(result.reason).toContain("helpfull");
+		expect(result.reason).toContain("not a valid category");
+	});
+
 	it("stores reasoning in metadata", async () => {
 		const { judge } = createMockJudge(
 			'{"classification":"helpful","reasoning":"Thorough analysis of the output"}',

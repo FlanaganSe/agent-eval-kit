@@ -39,6 +39,31 @@ describe("regex", () => {
 		expect(() => regex("[invalid")).toThrow();
 	});
 
+	it("is pure with global flag (g flag does not cause stateful failures)", async () => {
+		const grader = regex(/hello/gi);
+		const output: TargetOutput = { text: "Hello World", latencyMs: 0 };
+		const result1 = await grader(output, undefined, ctx);
+		const result2 = await grader(output, undefined, ctx);
+		expect(result1.pass).toBe(true);
+		expect(result2.pass).toBe(true);
+	});
+
+	it("is pure with sticky flag (y flag does not cause stateful failures)", async () => {
+		const grader = regex(/\d+/y);
+		const output: TargetOutput = { text: "123 abc", latencyMs: 0 };
+		const result1 = await grader(output, undefined, ctx);
+		const result2 = await grader(output, undefined, ctx);
+		expect(result1.pass).toBe(true);
+		expect(result2.pass).toBe(true);
+	});
+
+	it("does not mutate the caller's RegExp instance", async () => {
+		const callerRegex = /test/g;
+		callerRegex.lastIndex = 3;
+		regex(callerRegex);
+		expect(callerRegex.lastIndex).toBe(3);
+	});
+
 	it("sets graderName", async () => {
 		const output: TargetOutput = { text: "test", latencyMs: 0 };
 		const result = await regex("\\d+")(output, undefined, ctx);

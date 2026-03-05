@@ -58,7 +58,7 @@ export const SerializedGraderConfigSchema = z.strictObject({
 export const GateConfigSchema = z.strictObject({
 	passRate: z.number().min(0).max(1).optional(),
 	maxCost: z.number().nonnegative().optional(),
-	p95LatencyMs: z.number().nonnegative().optional(),
+	p95LatencyMs: z.number().positive().optional(),
 });
 
 export const CaseSchema = z.strictObject({

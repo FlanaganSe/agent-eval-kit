@@ -64,6 +64,24 @@ describe("toolSequence — subset", () => {
 		const result = await toolSequence(["search", "missing"], "subset")(output, undefined, ctx);
 		expect(result.pass).toBe(false);
 	});
+
+	it("fails when expected duplicates are not satisfied", async () => {
+		const singleSearch: TargetOutput = {
+			toolCalls: [{ name: "search" }],
+			latencyMs: 0,
+		};
+		const result = await toolSequence(["search", "search"], "subset")(singleSearch, undefined, ctx);
+		expect(result.pass).toBe(false);
+	});
+
+	it("passes when actual has enough duplicates", async () => {
+		const doubleSearch: TargetOutput = {
+			toolCalls: [{ name: "search" }, { name: "search" }, { name: "other" }],
+			latencyMs: 0,
+		};
+		const result = await toolSequence(["search", "search"], "subset")(doubleSearch, undefined, ctx);
+		expect(result.pass).toBe(true);
+	});
 });
 
 describe("toolSequence — superset", () => {
@@ -79,6 +97,28 @@ describe("toolSequence — superset", () => {
 	it("fails when actual has unexpected tool", async () => {
 		const result = await toolSequence(["search", "parse"], "superset")(output, undefined, ctx);
 		expect(result.pass).toBe(false);
+	});
+
+	it("fails when actual has more duplicates than expected", async () => {
+		const doubleSearch: TargetOutput = {
+			toolCalls: [{ name: "search" }, { name: "search" }],
+			latencyMs: 0,
+		};
+		const result = await toolSequence(["search"], "superset")(doubleSearch, undefined, ctx);
+		expect(result.pass).toBe(false);
+	});
+
+	it("passes when actual duplicates match expected duplicates", async () => {
+		const doubleSearch: TargetOutput = {
+			toolCalls: [{ name: "search" }, { name: "search" }],
+			latencyMs: 0,
+		};
+		const result = await toolSequence(["search", "search"], "superset")(
+			doubleSearch,
+			undefined,
+			ctx,
+		);
+		expect(result.pass).toBe(true);
 	});
 });
 

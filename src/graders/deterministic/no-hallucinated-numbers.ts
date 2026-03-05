@@ -39,6 +39,7 @@ export function noHallucinatedNumbers(options?: NoHallucinatedNumbersOptions): G
 		const sourceNumbers = extractNumbersFromToolResults(output.toolCalls ?? []);
 
 		const hallucinated: number[] = [];
+		let checkedCount = 0;
 
 		for (const num of textNumbers) {
 			// Skip year-like numbers (1900-2100)
@@ -51,6 +52,7 @@ export function noHallucinatedNumbers(options?: NoHallucinatedNumbersOptions): G
 				continue;
 			}
 
+			checkedCount++;
 			const grounded = sourceNumbers.some((src) => isWithinTolerance(num, src, tolerance));
 
 			if (!grounded) {
@@ -58,19 +60,18 @@ export function noHallucinatedNumbers(options?: NoHallucinatedNumbersOptions): G
 			}
 		}
 
-		const totalChecked = textNumbers.length;
 		const hallucinatedCount = hallucinated.length;
-		const score = totalChecked > 0 ? (totalChecked - hallucinatedCount) / totalChecked : 1;
+		const score = checkedCount > 0 ? (checkedCount - hallucinatedCount) / checkedCount : 1;
 		const pass = hallucinatedCount === 0;
 
 		return {
 			pass,
 			score,
 			reason: pass
-				? `All ${totalChecked} numbers in output are grounded in tool results`
+				? `All ${checkedCount} numbers in output are grounded in tool results`
 				: `Hallucinated numbers: ${hallucinated.join(", ")}`,
 			graderName,
-			metadata: { hallucinated, totalChecked },
+			metadata: { hallucinated, checkedCount },
 		};
 	};
 }

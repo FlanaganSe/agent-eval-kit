@@ -114,6 +114,47 @@ describe("not", () => {
 	});
 });
 
+const graderWithCost: GraderFn = async () => ({
+	pass: true,
+	score: 1,
+	reason: "passed with cost",
+	graderName: "costly",
+	metadata: { judgeCost: 0.05 },
+});
+
+describe("cost propagation", () => {
+	it("all() aggregates judgeCost from children", async () => {
+		const grader = all([graderWithCost, graderWithCost]);
+		const result = await grader(output, undefined, ctx);
+		expect(result.metadata?.judgeCost).toBe(0.1);
+	});
+
+	it("any() aggregates judgeCost from children", async () => {
+		const grader = any([graderWithCost, failingGrader]);
+		const result = await grader(output, undefined, ctx);
+		expect(result.metadata?.judgeCost).toBe(0.05);
+	});
+
+	it("not() propagates judgeCost from child", async () => {
+		const grader = not(graderWithCost);
+		const result = await grader(output, undefined, ctx);
+		expect(result.metadata?.judgeCost).toBe(0.05);
+	});
+
+	it("omits metadata when no judgeCost present", async () => {
+		const grader = all([passingGrader, partialGrader]);
+		const result = await grader(output, undefined, ctx);
+		expect(result.metadata).toBeUndefined();
+	});
+
+	it("nested composition aggregates costs", async () => {
+		const grader = all([any([graderWithCost, graderWithCost]), not(graderWithCost)]);
+		const result = await grader(output, undefined, ctx);
+		// any([0.05, 0.05]) = 0.10, not(0.05) = 0.05, all total = 0.15
+		expect(result.metadata?.judgeCost).toBeCloseTo(0.15);
+	});
+});
+
 describe("nested composition", () => {
 	it("all([any([...]), not(...)])", async () => {
 		const grader = all([any([failingGrader, passingGrader]), not(failingGrader)]);

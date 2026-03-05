@@ -9,11 +9,16 @@ export interface RegexOptions {
 /** Checks that output.text matches the given regex pattern. */
 export function regex(pattern: string | RegExp, options?: RegexOptions): GraderFn {
 	// Compile regex eagerly in factory (catch errors at config time, not grade time)
-	const re = pattern instanceof RegExp ? pattern : new RegExp(pattern, options?.flags);
+	// Always create a new RegExp to avoid mutating a caller-owned instance (Immutable Rule #3)
+	const re =
+		pattern instanceof RegExp
+			? new RegExp(pattern.source, pattern.flags)
+			: new RegExp(pattern, options?.flags);
 	const graderName = `regex(${re.source})`;
 
 	return async (output) => {
 		const text = output.text ?? "";
+		re.lastIndex = 0;
 		const matched = re.test(text);
 
 		return {

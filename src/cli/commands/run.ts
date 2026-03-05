@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { defineCommand } from "citty";
 import { loadConfig, type ValidatedConfig } from "../../config/loader.js";
+import { VALID_MODES } from "../../config/modes.js";
 import type {
 	FixtureOptions,
 	JudgeCallFn,
@@ -36,8 +37,6 @@ import { globalArgs } from "../shared-args.js";
 
 // ─── Exported helpers for unit testing and reuse by record command ───────────
 
-const VALID_MODES: readonly RunMode[] = ["live", "replay", "judge-only"] as const;
-
 export function parseMode(value: string | undefined): RunMode | undefined {
 	if (value === undefined) return undefined;
 	if (VALID_MODES.includes(value as RunMode)) return value as RunMode;
@@ -51,6 +50,16 @@ export function parseIntArg(value: string | undefined, name: string): number | u
 		throw new ConfigError(`--${name} must be a positive integer, got '${value}'`);
 	}
 	return n;
+}
+
+/** Resolves the effective run mode: --update-fixtures forces live, otherwise --mode > config default > "replay". */
+export function resolveEffectiveMode(
+	modeArg: string | undefined,
+	updateFixtures: boolean,
+	configDefault: RunMode | undefined,
+): RunMode {
+	if (updateFixtures) return "live";
+	return parseMode(modeArg) ?? configDefault ?? "replay";
 }
 
 export function buildRunOptions(
@@ -77,9 +86,7 @@ export function buildRunOptions(
 	onFixtureStale?: (caseId: string, ageDays: number) => void,
 ): RunOptions {
 	const isUpdateFixtures = args["update-fixtures"] ?? false;
-	const mode = isUpdateFixtures
-		? "live"
-		: (parseMode(args.mode) ?? configDefaults.defaultMode ?? "replay");
+	const mode = resolveEffectiveMode(args.mode, isUpdateFixtures, configDefaults.defaultMode);
 	const record = isUpdateFixtures || (args.record ?? false);
 
 	const configHash = computeFixtureConfigHash(suite);
@@ -198,7 +205,12 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 		const suites = filterSuites(validatedConfig.suites, args.suite);
 
 		// Warn about trials in replay mode
-		const effectiveMode = args.mode ?? validatedConfig.run.defaultMode;
+		const isUpdateFixtures = args["update-fixtures"] ?? false;
+		const effectiveMode = resolveEffectiveMode(
+			args.mode,
+			isUpdateFixtures,
+			validatedConfig.run.defaultMode,
+		);
 		if (args.trials && effectiveMode !== "live") {
 			logger.warn(
 				"Trials have no effect in replay mode with deterministic graders. Each trial will produce identical results.",
@@ -240,7 +252,7 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 				const suite = applyCaseFilters(rawSuite);
 				if (suite.cases.length === 0) continue;
 				const estimate = estimateCost(suite, {
-					mode: parseMode(args.mode) ?? validatedConfig.run.defaultMode,
+					mode: effectiveMode,
 					trials: parseIntArg(args.trials, "trials"),
 				});
 				if (estimate.judgeCalls > 0 || estimate.targetCalls > 0) {
@@ -315,7 +327,8 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 				await writeGitHubSummary(run);
 			} catch (reporterErr) {
 				const msg = reporterErr instanceof Error ? reporterErr.message : String(reporterErr);
-				if (args.output) {
+				const hasOutputReporter = args.output || validatedConfig.reporters.some(hasReporterOutput);
+				if (hasOutputReporter) {
 					logger.error(`Reporter output failed: ${msg}`);
 					worstExitCode = Math.max(worstExitCode, 3);
 				} else {
@@ -327,6 +340,9 @@ export async function executeRun(args: ExecuteRunArgs): Promise<void> {
 			if (run.summary.aborted) {
 				worstExitCode = Math.max(worstExitCode, 130);
 			} else if (!run.summary.gateResult.pass) {
+				worstExitCode = Math.max(worstExitCode, 1);
+			} else if (run.summary.totalCases > 0 && run.summary.passed === 0 && run.summary.errors > 0) {
+				// No gates configured, but every case errored — infrastructure failure should not exit 0
 				worstExitCode = Math.max(worstExitCode, 1);
 			}
 		}
@@ -389,6 +405,12 @@ async function dispatchReporters(
 			process.stdout.write(`${result}\n`);
 		}
 	}
+}
+
+function hasReporterOutput(config: ReporterConfig): boolean {
+	if (typeof config === "string") return false;
+	if ("report" in config && typeof config.report === "function") return false;
+	return !!(config as ReporterConfigWithOptions).output;
 }
 
 function normalizeReporterConfig(config: ReporterConfig): {
@@ -517,10 +539,18 @@ async function runOnce(
 	logger: ReturnType<typeof createLogger>,
 	signal?: AbortSignal,
 ): Promise<void> {
+	let rateLimiter: RateLimiter | undefined;
 	try {
 		const validatedConfig = await loadConfigSafe(args.config);
 		const runDir = join(validatedConfig.projectDir, ".eval-runs");
 		const suites = filterSuites(validatedConfig.suites, args.suite);
+
+		// Create rate limiter (same logic as executeRun)
+		const rateLimitRpm =
+			parseIntArg(args["rate-limit"], "rate-limit") ?? validatedConfig.run.rateLimit;
+		if (rateLimitRpm) {
+			rateLimiter = createTokenBucketLimiter({ maxRequestsPerMinute: rateLimitRpm });
+		}
 
 		for (const rawSuite of suites) {
 			if (signal?.aborted) return;
@@ -536,7 +566,7 @@ async function runOnce(
 				suite,
 				signal ?? new AbortController().signal,
 				validatedConfig.fixtureDir,
-				undefined,
+				rateLimiter,
 				validatedConfig.judge?.call,
 				undefined,
 				validatedConfig.plugins,
@@ -551,6 +581,8 @@ async function runOnce(
 	} catch (err) {
 		if (signal?.aborted) return;
 		logger.error(err instanceof Error ? err.message : String(err));
+	} finally {
+		rateLimiter?.dispose();
 	}
 }
 

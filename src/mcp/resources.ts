@@ -1,3 +1,4 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CaseSchema, EvalConfigSchema } from "../config/schema.js";
 import { BUILT_IN_GRADERS } from "../graders/registry.js";
@@ -70,8 +71,7 @@ export function generateGraderReference(): string {
 
 // ─── Resource registration ───────────────────────────────────────────────────
 
-// biome-ignore lint/suspicious/noExplicitAny: McpServer type is dynamically imported
-export function registerResources(server: any): void {
+export function registerResources(server: McpServer): void {
 	const configSchema = generateConfigSchema();
 	const caseSchema = generateCaseSchema();
 	const graderRef = generateGraderReference();

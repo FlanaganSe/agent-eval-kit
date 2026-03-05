@@ -173,7 +173,7 @@ export default defineCommand({
 		process.stdout.write(`${lines.join("\n")}\n`);
 
 		if (failures > 0) {
-			process.exit(1);
+			process.exitCode = 1;
 		}
 	},
 });

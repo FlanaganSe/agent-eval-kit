@@ -77,16 +77,43 @@ export function llmClassify(options: LlmClassifyOptions): GraderFn {
 			};
 		}
 
-		const expectedCategory = expected?.metadata?.classification as string | undefined;
+		const rawClassification = expected?.metadata?.classification;
+		// Normalize expectedCategory to canonical key casing (consistent with parser normalization)
+		let expectedCategory: string | undefined;
+		if (typeof rawClassification === "string") {
+			const matched = categoryNames.find(
+				(c) => c.toLowerCase() === rawClassification.toLowerCase(),
+			);
+			if (!matched) {
+				return {
+					pass: false,
+					score: 0,
+					reason: `expected.metadata.classification '${rawClassification}' is not a valid category. Valid: ${categoryNames.join(", ")}`,
+					graderName: "llm-classify",
+				};
+			}
+			expectedCategory = matched;
+		}
 
 		const messages = buildClassificationPrompt({
 			output,
 			categories,
 			criteria,
-			expected: expectedCategory,
 		});
 
-		const response = await judge(messages, { temperature: 0 });
+		let response: Awaited<ReturnType<JudgeCallFn>>;
+		try {
+			response = await judge(messages, { temperature: 0 });
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			return {
+				pass: false,
+				score: 0,
+				reason: `Judge call failed: ${message}`,
+				graderName: "llm-classify",
+				metadata: { error: message },
+			};
+		}
 		const parsed = parseClassificationResponse(response.text, categoryNames);
 
 		if (!parsed.success) {

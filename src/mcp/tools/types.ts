@@ -1,7 +1,9 @@
-/** Standard MCP tool result shape. */
+/** Standard MCP tool result shape. Compatible with the MCP SDK's CallToolResult type. */
 export interface ToolResult {
 	readonly isError?: boolean | undefined;
-	readonly content: readonly ToolResultContent[];
+	readonly content: ToolResultContent[];
+	/** Index signature required by the MCP SDK's CallToolResult type. */
+	readonly [key: string]: unknown;
 }
 
 export interface ToolResultContent {

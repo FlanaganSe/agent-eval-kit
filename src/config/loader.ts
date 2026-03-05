@@ -4,6 +4,7 @@ import { createJiti } from "jiti";
 import { assertSafeFixtureDir } from "../cli/resolve-fixture-dir.js";
 import type { EvalPlugin } from "../plugin/types.js";
 import { loadCases } from "./case-loader.js";
+import { VALID_MODES } from "./modes.js";
 import { CaseSchema } from "./schema.js";
 import type {
 	Case,
@@ -125,8 +126,6 @@ async function importConfig(filePath: string): Promise<EvalConfig | undefined> {
 	}
 }
 
-const VALID_MODES: readonly RunMode[] = ["live", "replay", "judge-only"] as const;
-
 function validateConfigShape(config: unknown): asserts config is EvalConfig {
 	if (!config || typeof config !== "object") {
 		throw new Error("Config file must export an object. Run 'agent-eval-kit init' to create one.");
@@ -138,6 +137,20 @@ function validateConfigShape(config: unknown): asserts config is EvalConfig {
 		throw new Error(
 			"No eval.config.ts found or config has no suites. Run 'agent-eval-kit init' to create one.",
 		);
+	}
+
+	// Reject duplicate suite names
+	const suiteNames = new Set<string>();
+	for (const suite of cfg.suites as readonly Record<string, unknown>[]) {
+		const name = typeof suite?.name === "string" ? suite.name : undefined;
+		if (name) {
+			if (suiteNames.has(name)) {
+				throw new Error(
+					`Duplicate suite name "${name}". Suite names must be unique — duplicates cause fixture and run storage collisions.`,
+				);
+			}
+			suiteNames.add(name);
+		}
 	}
 
 	for (let i = 0; i < cfg.suites.length; i++) {
@@ -163,13 +176,21 @@ function validateConfigShape(config: unknown): asserts config is EvalConfig {
 		validatePositiveInt(suite.concurrency, `suites[${i}].concurrency`);
 		if (suite.gates && typeof suite.gates === "object") {
 			const gates = suite.gates as Record<string, unknown>;
+			const VALID_GATE_KEYS = new Set(["passRate", "maxCost", "p95LatencyMs"]);
+			for (const key of Object.keys(gates)) {
+				if (!VALID_GATE_KEYS.has(key)) {
+					throw new Error(
+						`suites[${i}].gates: unknown key '${key}'. Valid keys: ${[...VALID_GATE_KEYS].join(", ")}`,
+					);
+				}
+			}
 			validateRange(gates.passRate, 0, 1, `suites[${i}].gates.passRate`);
 			validateNonNegative(gates.maxCost, `suites[${i}].gates.maxCost`);
 			validatePositiveNumber(gates.p95LatencyMs, `suites[${i}].gates.p95LatencyMs`);
 		}
 		if (suite.replay && typeof suite.replay === "object") {
 			const replay = suite.replay as Record<string, unknown>;
-			validatePositiveNumber(replay.ttlDays, `suites[${i}].replay.ttlDays`);
+			validatePositiveInt(replay.ttlDays, `suites[${i}].replay.ttlDays`);
 		}
 	}
 

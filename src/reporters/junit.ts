@@ -38,7 +38,6 @@ export function formatJunitXml(run: Run): string {
 		const isMultiTrial = trials.length > 1;
 		const passCount = trials.filter((t) => t.status === "pass").length;
 		const hasError = trials.some((t) => t.status === "error");
-		const hasFail = trials.some((t) => t.status === "fail");
 		const allPassed = passCount === trials.length;
 		const totalTime = trials.reduce((sum, t) => sum + t.durationMs, 0);
 
@@ -50,7 +49,7 @@ export function formatJunitXml(run: Run): string {
 
 		if (allPassed) {
 			testcases.push(`    <testcase name="${name}" classname="${classname}" time="${time}" />`);
-		} else if (hasError && !hasFail) {
+		} else if (hasError) {
 			errors++;
 			const errorTrial = trials.find((t) => t.status === "error");
 			const message = escapeXml(errorTrial?.grades.find((g) => !g.pass)?.reason ?? "Unknown error");

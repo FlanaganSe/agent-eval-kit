@@ -406,6 +406,26 @@ describe("compareRuns", () => {
 			expect(result.cases[0]?.compareScore).toBeCloseTo(0.95);
 		});
 
+		it("fail → error = regression (status change between non-pass modes)", () => {
+			const base = makeRun("base", [makeTrial("C01", "fail", 0)]);
+			const compare = makeRun("compare", [makeTrial("C01", "error", 0)]);
+
+			const result = compareRuns(base, compare);
+
+			expect(result.summary.regressions).toBe(1);
+			expect(result.cases[0]?.direction).toBe("regression");
+		});
+
+		it("error → fail = regression (status change between non-pass modes)", () => {
+			const base = makeRun("base", [makeTrial("C01", "error", 0)]);
+			const compare = makeRun("compare", [makeTrial("C01", "fail", 0)]);
+
+			const result = compareRuns(base, compare);
+
+			expect(result.summary.regressions).toBe(1);
+			expect(result.cases[0]?.direction).toBe("regression");
+		});
+
 		it("regressions sorted before improvements", () => {
 			const base = makeRun("base", [makeTrial("A01", "fail", 0), makeTrial("B01", "pass", 1)]);
 			const compare = makeRun("compare", [

@@ -5,6 +5,8 @@ export interface JudgeOnlyOptions {
 	readonly previousRun: Run;
 	readonly suiteConfig: ResolvedSuite;
 	readonly runOptions: RunOptions;
+	/** Called after each trial is re-graded, for progress reporting. */
+	readonly onTrial?: ((trial: Trial) => Promise<void>) | undefined;
 }
 
 /**
@@ -15,13 +17,20 @@ export interface JudgeOnlyOptions {
  * Graders come from the current suite config (not the previous run).
  */
 export async function runJudgeOnly(options: JudgeOnlyOptions): Promise<readonly Trial[]> {
-	const { previousRun, suiteConfig, runOptions } = options;
+	const { previousRun, suiteConfig, runOptions, onTrial } = options;
 	const regraded: Trial[] = [];
 
 	// Build a lookup for expected values from the current suite config
 	const expectedByCaseId = new Map(suiteConfig.cases.map((c) => [c.id, c.expected]));
 
 	for (const trial of previousRun.trials) {
+		// Preserve error trials as-is — their output is synthetic and should not be re-graded
+		if (trial.status === "error") {
+			regraded.push(trial);
+			await onTrial?.(trial);
+			continue;
+		}
+
 		if (!expectedByCaseId.has(trial.caseId)) {
 			process.stderr.write(
 				`[warn] Case '${trial.caseId}' from previous run not found in current suite config. Grading with no expected value.\n`,
@@ -41,7 +50,7 @@ export async function runJudgeOnly(options: JudgeOnlyOptions): Promise<readonly 
 			},
 		);
 
-		regraded.push({
+		const regradedTrial: Trial = {
 			caseId: trial.caseId,
 			status: pipelineResult.caseResult.pass ? "pass" : "fail",
 			output: trial.output,
@@ -49,7 +58,9 @@ export async function runJudgeOnly(options: JudgeOnlyOptions): Promise<readonly 
 			score: pipelineResult.caseResult.score,
 			durationMs: trial.durationMs,
 			trialIndex: trial.trialIndex,
-		});
+		};
+		regraded.push(regradedTrial);
+		await onTrial?.(regradedTrial);
 	}
 
 	return regraded;

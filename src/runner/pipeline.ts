@@ -49,6 +49,9 @@ export async function runGraderPipeline(
 			grades.push(grade);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
+			process.stderr.write(
+				`[grader-error] Grader '${graderContext.graderName}' threw on case '${context.caseId}': ${message}\n`,
+			);
 			grades.push({
 				pass: false,
 				score: 0,

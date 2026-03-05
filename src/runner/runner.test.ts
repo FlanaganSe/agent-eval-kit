@@ -108,6 +108,22 @@ describe("runSuite", () => {
 		await runSuite(sequentialSuite, options);
 		expect(order).toEqual(["hello", "world"]);
 	});
+
+	it("throws when replay mode is missing fixtureOptions", async () => {
+		await expect(runSuite(suite, { mode: "replay", timeoutMs: 5000 })).rejects.toThrow(
+			'mode "replay" requires fixtureOptions and configHash',
+		);
+	});
+
+	it("throws when replay mode is missing configHash", async () => {
+		await expect(
+			runSuite(suite, {
+				mode: "replay",
+				timeoutMs: 5000,
+				fixtureOptions: { baseDir: ".eval-fixtures" },
+			}),
+		).rejects.toThrow('mode "replay" requires fixtureOptions and configHash');
+	});
 });
 
 describe("generateRunId", () => {

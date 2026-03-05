@@ -35,11 +35,9 @@ export async function startMcpServer(): Promise<void> {
 	console.error(`agent-eval-kit MCP server v${VERSION} started`);
 }
 
-// Use `any` for McpServer type since it's dynamically imported
-// biome-ignore lint/suspicious/noExplicitAny: McpServer type is dynamically imported
-type McpServerInstance = any;
+import type { McpServer as McpServerType } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-function registerTools(server: McpServerInstance, cwd: string): void {
+function registerTools(server: McpServerType, cwd: string): void {
 	// ─── run-suite ────────────────────────────────────────────────────────────
 	server.registerTool(
 		"run-suite",
@@ -223,8 +221,8 @@ Returns structured JSON with an array of grader descriptors.`,
 			category,
 			includePlugins,
 		}: {
-			tier?: string;
-			category?: string;
+			tier?: string | undefined;
+			category?: string | undefined;
 			includePlugins: boolean;
 		}) =>
 			handleListGraders(
@@ -259,6 +257,7 @@ Returns { valid: true/false, warnings: [...], error?: string }.`,
 				idempotentHint: true,
 			},
 		},
-		async ({ configPath }: { configPath?: string }) => handleValidateConfig({ configPath }, cwd),
+		async ({ configPath }: { configPath?: string | undefined }) =>
+			handleValidateConfig({ configPath }, cwd),
 	);
 }
