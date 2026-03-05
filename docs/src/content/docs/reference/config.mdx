@@ -54,10 +54,10 @@ export default defineConfig({
     {
       name: "smoke",
       description: "Basic smoke tests",
-      target: async (input) => ({
-        text: "response",
-        latencyMs: 100,
-      }),
+      target: async (input) => {
+        const response = await myAgent(input.prompt);
+        return { text: response.text, latencyMs: response.latencyMs };
+      },
       cases: "cases/smoke.jsonl",
       defaultGraders: [
         { grader: contains("hello"), weight: 1.0 },

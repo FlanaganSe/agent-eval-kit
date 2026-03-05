@@ -29,15 +29,8 @@ export default defineConfig({
       name: "smoke",
       target: async (input) => {
         // Replace with your actual agent/API call
-        const response = await fetch("https://api.example.com/chat", {
-          method: "POST",
-          body: JSON.stringify({ prompt: input.prompt }),
-        });
-        const data = await response.json();
-        return {
-          text: data.message,
-          latencyMs: data.latencyMs ?? 0,
-        };
+        const response = await myAgent(input.prompt);
+        return { text: response.text, latencyMs: response.latencyMs };
       },
       cases: "cases/smoke.jsonl",
       defaultGraders: [
