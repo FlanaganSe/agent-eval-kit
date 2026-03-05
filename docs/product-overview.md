@@ -23,6 +23,7 @@ The core problem: AI agents are non-deterministic. You can't just write unit tes
 | CLI | citty 0.2.x | Lightweight, lazy-loaded subcommands |
 | MCP SDK | `@modelcontextprotocol/sdk` | Production dep (not dev) — enables IDE integration |
 | Interactive prompts | `@clack/prompts` | Used in `init` wizard and `install-hooks` |
+| YAML parsing | yaml 2.x | Loads cases from .yaml files |
 | Terminal colors | picocolors | Zero-dependency, fast |
 
 No database. No bundler. No runtime transpilation beyond jiti for config loading.
@@ -119,9 +120,9 @@ The framework has **locked terminology** — these exact terms are used consiste
 
 ### Input/Output shapes
 
-**`CaseInput`**: `messages` (chat history), optional `systemPrompt`, optional `tools` (definitions), optional `metadata`.
+**`CaseInput`**: Arbitrary key-value record (`z.record(z.string(), z.unknown())`). Shape is user-defined — common fields include `messages`, `prompt`, `systemPrompt`, `tools`, `metadata`, but none are enforced by the schema.
 
-**`TargetOutput`**: `text` (response), optional `toolCalls` (name + args + result), optional `tokenUsage`, required `latencyMs`, optional `cost`, optional `raw` (provider payload — can be stripped at fixture write time), optional `metadata`.
+**`TargetOutput`**: `text` (response), optional `toolCalls` (name + args + result), optional `tokenUsage`, required `latencyMs`, optional `cost`, optional `raw` (provider payload — can be stripped at fixture write time).
 
 ### Run modes
 
@@ -356,7 +357,7 @@ pnpm lint          # Biome check
 pnpm verify        # typecheck + lint + test (CI gate)
 ```
 
-**68 test files**, all co-located. Runnable examples in `examples/` hit real LLM APIs (OpenRouter) and are excluded from CI.
+**70 test files**, all co-located. Runnable examples in `examples/` hit real LLM APIs (OpenRouter) and are excluded from CI.
 
 **Testing philosophy**:
 - No mocking framework — plain objects and functions everywhere
@@ -395,7 +396,7 @@ Normal approximation breaks down for small sample sizes (< 30 trials) and extrem
 Pass^k (all trials must pass) is deliberately strict. If a case passes 4/5 times, it's flaky — and flaky cases should not count as passing. This catches non-determinism that majority-vote would paper over. The `flaky` flag on `TrialStats` explicitly surfaces this.
 
 ### Why `afterTrial` errors are swallowed?
-Plugin hooks like progress reporting and telemetry should never fail an evaluation. A flaky telemetry endpoint or a stderr write error in a progress bar must not turn a passing eval run into a failure. `beforeRun` and `afterRun` errors propagate because they indicate setup/teardown problems that likely affect the evaluation itself.
+Plugin hooks like progress reporting and telemetry should never fail an evaluation. A flaky telemetry endpoint or a stderr write error in a progress bar must not turn a passing eval run into a failure. Only `beforeRun` errors propagate — setup failures indicate real problems. `afterTrial` and `afterRun` errors are logged to stderr and swallowed.
 
 ### `isolatedDeclarations` disabled
 Zod 4's schema inference types are too complex for TypeScript's isolated declarations mode. The tsconfig notes to re-enable if switching to a faster type-checker (oxc, swc).
@@ -422,7 +423,7 @@ Zod 4's schema inference types are too complex for TypeScript's isolated declara
 
 10. **`strictFixtures` mode makes stale fixtures a hard error.** Without it, stale fixtures produce a warning but still replay. Enable `--strict-fixtures` in CI to catch forgotten re-records.
 
-11. **Plugin `afterTrial` errors are swallowed** (logged to stderr, don't fail the run). `beforeRun` and `afterRun` errors propagate.
+11. **Plugin `afterTrial` and `afterRun` errors are swallowed** (logged to stderr, don't fail the run). Only `beforeRun` errors propagate.
 
 12. **Run IDs contain timestamps** (`run-YYYYMMDD-HHmmss-XXXX`). They sort lexicographically by time. The 4-char random suffix prevents collisions within the same second.
 

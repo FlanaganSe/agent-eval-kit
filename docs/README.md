@@ -33,6 +33,7 @@ src/content/docs/
 │   ├── cli.mdx
 │   ├── config.mdx
 │   ├── graders-api.mdx
+│   ├── programmatic-api.mdx
 │   ├── reporters.mdx
 │   └── plugin-api.mdx
 └── advanced/
